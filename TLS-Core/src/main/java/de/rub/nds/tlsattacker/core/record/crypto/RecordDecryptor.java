@@ -8,6 +8,7 @@
  */
 package de.rub.nds.tlsattacker.core.record.crypto;
 
+import de.rub.nds.protocol.exception.EndOfStreamException;
 import de.rub.nds.protocol.exception.ParserException;
 import de.rub.nds.tlsattacker.core.constants.ProtocolMessageType;
 import de.rub.nds.tlsattacker.core.constants.ProtocolVersion;
@@ -55,7 +56,7 @@ public class RecordDecryptor extends Decryptor {
                     || record.getContentMessageType() != ProtocolMessageType.CHANGE_CIPHER_SPEC) {
                 try {
                     recordCipher.decrypt(record);
-                } catch (ParserException | CryptoException ex) {
+                } catch (ParserException | CryptoException | EndOfStreamException ex) {
                     if (recordCipherList.indexOf(recordCipher) > 0) {
                         LOGGER.warn(
                                 "Failed to decrypt record, will try to process with previous cipher");

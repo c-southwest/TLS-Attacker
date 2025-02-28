@@ -147,13 +147,20 @@ public class CertificateMessagePreparator extends HandshakeMessagePreparator<Cer
                     }
                     prepareFromEntryList(msg);
                 } else {
-                    entryList = new LinkedList<>();
-                    for (CertificateBytes certificateBytes :
-                            chooser.getConfig().getDefaultExplicitCertificateChain()) {
-                        CertificateEntry entry = new CertificateEntry(certificateBytes.getBytes());
-                        entryList.add(entry);
+                    if (entryList != null) {
+                        // Generate EMPTY_CERTIFICATE
+                        preparePredefinedCerts(entryList);
+                    } else {
+                        // Generate CERTIFICATE
+                        entryList = new LinkedList<>();
+                        for (CertificateBytes certificateBytes :
+                                chooser.getConfig().getDefaultExplicitCertificateChain()) {
+                            CertificateEntry entry =
+                                    new CertificateEntry(certificateBytes.getBytes());
+                            entryList.add(entry);
+                        }
+                        msg.setCertificateEntryList(entryList);
                     }
-                    msg.setCertificateEntryList(entryList);
                     prepareFromEntryList(msg);
                 }
                 LOGGER.debug(
@@ -223,7 +230,6 @@ public class CertificateMessagePreparator extends HandshakeMessagePreparator<Cer
                 prepareCert(entryList, x509Context, certConfig, i);
             }
         }
-        chooser.getContext().getTlsContext().setTalkingX509Context(x509Context);
     }
 
     private void prepareCert(

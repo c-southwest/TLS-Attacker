@@ -26,7 +26,7 @@ import java.io.IOException;
  */
 public class UdpLayer extends ProtocolLayer<LayerProcessingHint, UdpDataPacket> {
 
-    private final Context context;
+    protected final Context context;
 
     public UdpLayer(Context context) {
         super(ImplementedLayers.UDP);
@@ -88,7 +88,7 @@ public class UdpLayer extends ProtocolLayer<LayerProcessingHint, UdpDataPacket> 
         return new LayerProcessingResult<UdpDataPacket>(null, getLayerType(), true);
     }
 
-    private UdpTransportHandler getTransportHandler() {
+    protected UdpTransportHandler getTransportHandler() {
         if (context.getTransportHandler() == null) {
             throw new RuntimeException("TransportHandler is not set in context!");
         }

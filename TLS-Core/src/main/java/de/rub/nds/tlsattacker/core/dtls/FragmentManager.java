@@ -23,7 +23,6 @@ public class FragmentManager {
 
     private Map<FragmentKey, FragmentCollector> fragments;
     private Config config;
-    private int lastInterpretedMessageSeq = -1;
 
     public FragmentManager(Config config) {
         fragments = new HashMap<>();
@@ -69,21 +68,6 @@ public class FragmentManager {
             boolean onlyIfComplete, boolean skipMessageSequences) {
         List<DtlsHandshakeMessageFragment> handshakeFragmentList = new LinkedList<>();
         List<FragmentKey> orderedFragmentKeys = new ArrayList<>(fragments.keySet());
-        orderedFragmentKeys.sort(
-                new Comparator<FragmentKey>() {
-                    @Override
-                    public int compare(FragmentKey fragmentKey1, FragmentKey fragmentKey2) {
-                        if (fragmentKey1.getEpoch() > fragmentKey2.getEpoch()) {
-                            return -1;
-                        } else if (fragmentKey1.getEpoch() < fragmentKey2.getEpoch()) {
-                            return 1;
-                        } else {
-                            return fragmentKey1
-                                    .getMessageSeq()
-                                    .compareTo(fragmentKey2.getMessageSeq());
-                        }
-                    }
-                });
 
         for (FragmentKey key : orderedFragmentKeys) {
             FragmentCollector fragmentCollector = fragments.get(key);
@@ -100,11 +84,6 @@ public class FragmentManager {
                 }
             }
             if (!fragmentCollector.isInterpreted()) {
-                if (!skipMessageSequences
-                        && key.getMessageSeq() != lastInterpretedMessageSeq + 1
-                        && !fragmentCollector.isRetransmission()) {
-                    break;
-                }
                 if (onlyIfComplete && !fragmentCollector.isMessageComplete()) {
                     LOGGER.debug(
                             "Incomplete message. Not processing: msg_sqn: "
@@ -114,7 +93,7 @@ public class FragmentManager {
                 } else {
                     handshakeFragmentList.add(fragmentCollector.buildCombinedFragment());
                     fragmentCollector.setInterpreted(true);
-                    lastInterpretedMessageSeq = key.getMessageSeq();
+                    clearFragmentedMessage(key.getMessageSeq(), key.getEpoch());
                 }
             }
         }

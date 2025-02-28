@@ -32,7 +32,7 @@ public class LayerStackFactory {
                         new MessageLayer(context),
                         new DtlsFragmentLayer(context),
                         new RecordLayer(context),
-                        new UdpLayer(context));
+                        new FirstCachedUdpLayer(context));
             case QUIC:
                 return new LayerStack(
                         context,
