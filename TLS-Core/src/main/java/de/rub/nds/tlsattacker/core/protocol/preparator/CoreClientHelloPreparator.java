@@ -143,6 +143,8 @@ public abstract class CoreClientHelloPreparator<T extends CoreClientHelloMessage
     private void prepareProtocolVersion(T msg) {
         if (chooser.getConfig().getHighestProtocolVersion().isTLS13()) {
             msg.setProtocolVersion(ProtocolVersion.TLS12.getValue());
+        } else if (chooser.getConfig().getHighestProtocolVersion().isDTLS13()) {
+            msg.setProtocolVersion(ProtocolVersion.DTLS12.getValue());
         } else {
             msg.setProtocolVersion(chooser.getConfig().getHighestProtocolVersion().getValue());
         }

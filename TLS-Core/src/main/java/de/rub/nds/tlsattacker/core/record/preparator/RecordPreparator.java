@@ -98,6 +98,8 @@ public class RecordPreparator extends Preparator<Record> {
         if (chooser.getSelectedProtocolVersion().isTLS13()
                 || tlsContext.getActiveKeySetTypeWrite() == Tls13KeySetType.EARLY_TRAFFIC_SECRETS) {
             record.setProtocolVersion(ProtocolVersion.TLS12.getValue());
+        } else if (chooser.getSelectedProtocolVersion().isDTLS13()) {
+            record.setProtocolVersion(ProtocolVersion.DTLS12.getValue());
         } else {
             record.setProtocolVersion(chooser.getSelectedProtocolVersion().getValue());
         }
