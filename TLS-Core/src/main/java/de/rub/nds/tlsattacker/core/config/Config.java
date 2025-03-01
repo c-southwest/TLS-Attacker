@@ -1437,7 +1437,7 @@ public class Config implements Serializable {
                         ArrayConverter.hexStringToByteArray(
                                 "2A981DB6CDD02A06C1763102C9E741365AC4E6F72B3176A6BD6A3523D3EC0F4C")));
         defaultClientKeyShareNamedGroups = new LinkedList<>();
-        defaultClientKeyShareNamedGroups.add(NamedGroup.ECDH_X25519);
+        defaultClientKeyShareNamedGroups.add(NamedGroup.SECP256R1);
         defaultServerKeyShareEntry =
                 new KeyShareStoreEntry(
                         NamedGroup.ECDH_X25519,
