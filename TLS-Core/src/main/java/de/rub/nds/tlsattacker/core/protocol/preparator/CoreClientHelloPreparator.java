@@ -15,6 +15,7 @@ import de.rub.nds.tlsattacker.core.constants.ExtensionType;
 import de.rub.nds.tlsattacker.core.constants.HandshakeMessageType;
 import de.rub.nds.tlsattacker.core.constants.ProtocolVersion;
 import de.rub.nds.tlsattacker.core.protocol.message.CoreClientHelloMessage;
+import de.rub.nds.tlsattacker.core.protocol.message.extension.CookieExtensionMessage;
 import de.rub.nds.tlsattacker.core.protocol.message.extension.SessionTicketTLSExtensionMessage;
 import de.rub.nds.tlsattacker.core.workflow.chooser.Chooser;
 import java.io.ByteArrayOutputStream;
@@ -47,6 +48,10 @@ public abstract class CoreClientHelloPreparator<T extends CoreClientHelloMessage
         if (isDTLS()) {
             prepareCookie(msg);
             prepareCookieLength(msg);
+        }
+        if(chooser.getConfig().getHighestProtocolVersion().isDTLS13() && chooser.getContext().getTlsContext().getExtensionCookie() != null) {
+            chooser.getConfig().setAddCookieExtension(true);
+            msg.addExtension(0, new CookieExtensionMessage());
         }
         prepareExtensions();
         prepareExtensionLength();
