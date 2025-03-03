@@ -42,6 +42,8 @@ public class PskSet implements Serializable {
     @XmlJavaTypeAdapter(UnformattedByteArrayAdapter.class)
     private byte[] ticketNonce;
 
+    private boolean isFromResumption = false;
+
     private CipherSuite cipherSuite;
 
     public PskSet() {}
@@ -123,6 +125,14 @@ public class PskSet implements Serializable {
 
     public void setTicketNonce(byte[] ticketNonce) {
         this.ticketNonce = ticketNonce;
+    }
+
+    public boolean getIsFromResumption() {
+        return isFromResumption;
+    }
+
+    public void setIsFromResumption(boolean fromResumption) {
+        isFromResumption = fromResumption;
     }
 
     /**

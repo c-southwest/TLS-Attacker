@@ -78,6 +78,7 @@ public class NewSessionTicketHandler extends HandshakeMessageHandler<NewSessionT
         // required
         if (tlsContext.getActiveClientKeySetType() == Tls13KeySetType.APPLICATION_TRAFFIC_SECRETS) {
             pskSet.setPreSharedKey(derivePsk(pskSet));
+            pskSet.setIsFromResumption(true);
         }
 
         LOGGER.debug("Adding PSK Set");
