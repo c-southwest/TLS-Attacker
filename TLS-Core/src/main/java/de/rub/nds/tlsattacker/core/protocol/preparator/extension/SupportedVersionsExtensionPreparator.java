@@ -52,7 +52,7 @@ public class SupportedVersionsExtensionPreparator
 
     private byte[] createProtocolVersionArray() {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        if(chooser.getConfig().getHighestProtocolVersion().isDTLS13()){
+        if (chooser.getConfig().getHighestProtocolVersion().isDTLS13()) {
             chooser.getConfig().setSupportedVersions(ProtocolVersion.DTLS13);
         }
         for (ProtocolVersion version : chooser.getConfig().getSupportedVersions()) {

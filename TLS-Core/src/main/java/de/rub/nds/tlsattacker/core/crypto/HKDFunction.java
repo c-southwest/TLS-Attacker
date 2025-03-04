@@ -8,6 +8,8 @@
  */
 package de.rub.nds.tlsattacker.core.crypto;
 
+import static de.rub.nds.tlsattacker.core.util.LoggerPrintConverter.bytesToHexWithSpaces;
+
 import de.rub.nds.modifiablevariable.util.ArrayConverter;
 import de.rub.nds.tlsattacker.core.constants.HKDFAlgorithm;
 import de.rub.nds.tlsattacker.core.exceptions.CryptoException;
@@ -23,8 +25,6 @@ import org.apache.logging.log4j.Logger;
 import org.bouncycastle.crypto.digests.SM3Digest;
 import org.bouncycastle.crypto.macs.HMac;
 import org.bouncycastle.crypto.params.KeyParameter;
-
-import static de.rub.nds.tlsattacker.core.util.LoggerPrintConverter.bytesToHexWithSpaces;
 
 /** HKDF functions computation for TLS 1.3 */
 public class HKDFunction {
@@ -69,13 +69,11 @@ public class HKDFunction {
 
     public static final String SERVER_IN = "server in";
 
-    public static final String TLS13_LABEL_PREFIX  = "tls13 ";
+    public static final String TLS13_LABEL_PREFIX = "tls13 ";
 
     public static final String DTLS13_LABEL_PREFIX = "dtls13";
 
-
     private static final Logger LOGGER = LogManager.getLogger();
-
 
     /**
      * Computes HKDF-Extract output as defined in RFC 5869
@@ -195,9 +193,11 @@ public class HKDFunction {
     }
 
     /** Computes the HKDF-Label as defined in TLS 1.3 */
-    private static byte[] labelEncoder(byte[] hashValue, String labelIn, int outLen, boolean isDtls13) {
+    private static byte[] labelEncoder(
+            byte[] hashValue, String labelIn, int outLen, boolean isDtls13) {
         String labelPrefix = isDtls13 ? DTLS13_LABEL_PREFIX : TLS13_LABEL_PREFIX;
         String label = labelPrefix + labelIn;
+        LOGGER.debug("[DEBUG] inside labelEncoder() label: {}", label);
         int labelLength = label.getBytes(StandardCharsets.US_ASCII).length;
         int hashValueLength = hashValue.length;
         byte[] result =
@@ -288,7 +288,12 @@ public class HKDFunction {
      * @throws de.rub.nds.tlsattacker.core.exceptions.CryptoException
      */
     public static byte[] expandLabel(
-            HKDFAlgorithm hkdfAlgorithm, byte[] prk, String labelIn, byte[] hashValue, int outLen, boolean isDtls13)
+            HKDFAlgorithm hkdfAlgorithm,
+            byte[] prk,
+            String labelIn,
+            byte[] hashValue,
+            int outLen,
+            boolean isDtls13)
             throws CryptoException {
         byte[] info = labelEncoder(hashValue, labelIn, outLen, isDtls13);
         LOGGER.debug("[DEBUG] inside expandLabel() info: {}", bytesToHexWithSpaces(info));

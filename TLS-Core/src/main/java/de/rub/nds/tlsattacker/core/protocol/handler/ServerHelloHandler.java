@@ -8,6 +8,8 @@
  */
 package de.rub.nds.tlsattacker.core.protocol.handler;
 
+import static de.rub.nds.tlsattacker.core.util.LoggerPrintConverter.bytesToHexWithSpaces;
+
 import de.rub.nds.modifiablevariable.util.ArrayConverter;
 import de.rub.nds.protocol.crypto.CyclicGroup;
 import de.rub.nds.protocol.crypto.ec.EllipticCurve;
@@ -55,8 +57,6 @@ import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import static de.rub.nds.tlsattacker.core.util.LoggerPrintConverter.bytesToHexWithSpaces;
 
 public class ServerHelloHandler extends HandshakeMessageHandler<ServerHelloMessage> {
 
@@ -542,19 +542,25 @@ public class ServerHelloHandler extends HandshakeMessageHandler<ServerHelloMessa
             byte[] serverHelloBytes = message.getCompleteResultingMessage().getValue();
 
             tlsContext.getDigest().setRawBytes(HandshakeMessageType.MESSAGE_HASH.getArrayValue());
-            LOGGER.debug("[DEBUG] getDigest() setRawBytes MESSAGE_HASH: {}", bytesToHexWithSpaces(HandshakeMessageType.MESSAGE_HASH.getArrayValue()));
-            var length = ArrayConverter.intToBytes(
-                    clientHelloHash.length,
-                    HandshakeByteLength.MESSAGE_LENGTH_FIELD);
-            tlsContext
-                    .getDigest()
-                    .append(length);
+            LOGGER.debug(
+                    "[DEBUG] getDigest() setRawBytes MESSAGE_HASH: {}",
+                    bytesToHexWithSpaces(HandshakeMessageType.MESSAGE_HASH.getArrayValue()));
+            var length =
+                    ArrayConverter.intToBytes(
+                            clientHelloHash.length, HandshakeByteLength.MESSAGE_LENGTH_FIELD);
+            tlsContext.getDigest().append(length);
             LOGGER.debug("[DEBUG] getDigest() append length: {}", bytesToHexWithSpaces(length));
             tlsContext.getDigest().append(clientHelloHash);
-            LOGGER.debug("[DEBUG] getDigest() append clientHelloHash: {}", bytesToHexWithSpaces(clientHelloHash));
+            LOGGER.debug(
+                    "[DEBUG] getDigest() append clientHelloHash: {}",
+                    bytesToHexWithSpaces(clientHelloHash));
             tlsContext.getDigest().append(serverHelloBytes);
-            LOGGER.debug("[DEBUG] getDigest() append serverHelloBytes: {}", bytesToHexWithSpaces(serverHelloBytes));
-            LOGGER.debug("[DEBUG] Complete resulting digest: {}", bytesToHexWithSpaces(tlsContext.getDigest().getRawBytes()));
+            LOGGER.debug(
+                    "[DEBUG] getDigest() append serverHelloBytes: {}",
+                    bytesToHexWithSpaces(serverHelloBytes));
+            LOGGER.debug(
+                    "[DEBUG] Complete resulting digest: {}",
+                    bytesToHexWithSpaces(tlsContext.getDigest().getRawBytes()));
         } catch (NoSuchAlgorithmException ex) {
             LOGGER.error(ex);
         }

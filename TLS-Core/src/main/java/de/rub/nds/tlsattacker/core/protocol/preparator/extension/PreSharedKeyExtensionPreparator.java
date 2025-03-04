@@ -8,6 +8,8 @@
  */
 package de.rub.nds.tlsattacker.core.protocol.preparator.extension;
 
+import static de.rub.nds.tlsattacker.core.util.LoggerPrintConverter.bytesToHexWithSpaces;
+
 import de.rub.nds.modifiablevariable.util.ArrayConverter;
 import de.rub.nds.protocol.exception.PreparationException;
 import de.rub.nds.tlsattacker.core.constants.AlgorithmResolver;
@@ -37,8 +39,6 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import static de.rub.nds.tlsattacker.core.util.LoggerPrintConverter.bytesToHexWithSpaces;
 
 /** RFC draft-ietf-tls-tls13-21 */
 public class PreSharedKeyExtensionPreparator
@@ -135,7 +135,9 @@ public class PreSharedKeyExtensionPreparator
         byte[] clientHelloBytes = clientHelloSerializer.serialize();
         byte[] relevantBytes = getRelevantBytes(clientHelloBytes);
         LOGGER.debug("[DEBUG] clientHelloBytes: {}", bytesToHexWithSpaces(clientHelloBytes));
-        LOGGER.debug("[DEBUG] relevantBytes of clientHelloBytes: {}", bytesToHexWithSpaces(relevantBytes));
+        LOGGER.debug(
+                "[DEBUG] relevantBytes of clientHelloBytes: {}",
+                bytesToHexWithSpaces(relevantBytes));
         calculateBinders(relevantBytes, msg);
         prepareBinderListBytes(); // Re-write list using actual values
     }
@@ -186,18 +188,19 @@ public class PreSharedKeyExtensionPreparator
                         byte[] psk = pskSets.get(x).getPreSharedKey();
                         byte[] earlySecret = HKDFunction.extract(hkdfAlgorithm, new byte[0], psk);
                         String labelIn;
-                        if(pskSets.get(x).getIsFromResumption()){
+                        if (pskSets.get(x).getIsFromResumption()) {
                             labelIn = HKDFunction.BINDER_KEY_RES;
-                        }else{
+                        } else {
                             labelIn = HKDFunction.BINDER_KEY_EXT;
                         }
                         LOGGER.debug("[DEBUG] binderKey deriveSecret parameters:");
                         LOGGER.debug("[DEBUG]   - hkdfAlgorithm: {}", hkdfAlgorithm);
                         LOGGER.debug("[DEBUG]   - digestAlgo: {}", digestAlgo.getJavaName());
-                        LOGGER.debug("[DEBUG]   - earlySecret: {}", bytesToHexWithSpaces(earlySecret));
+                        LOGGER.debug(
+                                "[DEBUG]   - earlySecret: {}", bytesToHexWithSpaces(earlySecret));
                         LOGGER.debug("[DEBUG]   - labelIn: {}", labelIn);
-                        LOGGER.debug("[DEBUG] HKDFunction.BINDER_KEY_RES: {}",  bytesToHexWithSpaces(HKDFunction.BINDER_KEY_RES.getBytes()));
-                        LOGGER.debug("[DEBUG]   - toHash: ArrayConverter.hexStringToByteArray(\"\")");
+                        LOGGER.debug(
+                                "[DEBUG]   - toHash: ArrayConverter.hexStringToByteArray(\"\")");
                         byte[] binderKey =
                                 HKDFunction.deriveSecret(
                                         hkdfAlgorithm,
@@ -223,33 +226,47 @@ public class PreSharedKeyExtensionPreparator
                                         true);
                         LOGGER.debug("[DEBUG] earlySecret: {}", bytesToHexWithSpaces(earlySecret));
                         LOGGER.debug("[DEBUG] binderKey: {}", bytesToHexWithSpaces(binderKey));
-                        LOGGER.debug("[DEBUG] binderFinKey: {}", bytesToHexWithSpaces(binderFinKey));
+                        LOGGER.debug(
+                                "[DEBUG] binderFinKey: {}", bytesToHexWithSpaces(binderFinKey));
 
                         byte[] binderVal;
-                        if(tlsContext.getDigest().getRawBytes().length > 0){
-                            LOGGER.debug("[DEBUG] we are in the Hello Retry Request flow, so we will append the second client hello");
+                        if (tlsContext.getDigest().getRawBytes().length > 0) {
+                            LOGGER.debug(
+                                    "[DEBUG] we are in the Hello Retry Request flow, so we will append the second client hello");
                             byte[] savedDigest = tlsContext.getDigest().getRawBytes().clone();
                             tlsContext.getDigest().append(relevantBytes);
-                            LOGGER.debug("[DEBUG] append relevantBytes: {}", bytesToHexWithSpaces(relevantBytes));
-//                            LOGGER.debug("[DEBUG] complete digest getRawBytes: {}", bytesToHexWithSpaces(tlsContext.getDigest().getRawBytes()));
-                            SecretKeySpec keySpec = new SecretKeySpec(binderFinKey, mac.getAlgorithm());
+                            LOGGER.debug(
+                                    "[DEBUG] append relevantBytes: {}",
+                                    bytesToHexWithSpaces(relevantBytes));
+                            //                            LOGGER.debug("[DEBUG] complete digest
+                            // getRawBytes: {}",
+                            // bytesToHexWithSpaces(tlsContext.getDigest().getRawBytes()));
+                            SecretKeySpec keySpec =
+                                    new SecretKeySpec(binderFinKey, mac.getAlgorithm());
                             mac.init(keySpec);
-                            var usedHash = tlsContext
-                                    .getDigest()
-                                    .digest(
-                                            ProtocolVersion.TLS13,
-                                            pskSets.get(x).getCipherSuite());
+                            var usedHash =
+                                    tlsContext
+                                            .getDigest()
+                                            .digest(
+                                                    ProtocolVersion.TLS13,
+                                                    pskSets.get(x).getCipherSuite());
                             mac.update(usedHash);
-                            LOGGER.debug("[DEBUG] mac.update(usedHash) usedHash: {}", bytesToHexWithSpaces(usedHash));
+                            LOGGER.debug(
+                                    "[DEBUG] mac.update(usedHash) usedHash: {}",
+                                    bytesToHexWithSpaces(usedHash));
                             binderVal = mac.doFinal();
 
                             // 恢复digest的状态，稍后会完整添加ClientHello
                             tlsContext.getDigest().setRawBytes(savedDigest);
-                        }else{
-                            LOGGER.debug("[DEBUG] we are calculating binder for the 1st client hello");
+                        } else {
+                            LOGGER.debug(
+                                    "[DEBUG] we are calculating binder for the 1st client hello");
                             tlsContext.getDigest().setRawBytes(relevantBytes);
-                            LOGGER.debug("[DEBUG] setRawBytes for 1st relevantBytes: {}", bytesToHexWithSpaces(relevantBytes));
-                            SecretKeySpec keySpec = new SecretKeySpec(binderFinKey, mac.getAlgorithm());
+                            LOGGER.debug(
+                                    "[DEBUG] setRawBytes for 1st relevantBytes: {}",
+                                    bytesToHexWithSpaces(relevantBytes));
+                            SecretKeySpec keySpec =
+                                    new SecretKeySpec(binderFinKey, mac.getAlgorithm());
                             mac.init(keySpec);
                             mac.update(
                                     tlsContext
@@ -262,7 +279,8 @@ public class PreSharedKeyExtensionPreparator
                         }
 
                         LOGGER.debug("[DEBUG] Using PSK: {}", bytesToHexWithSpaces(psk));
-                        LOGGER.debug("[DEBUG] Calculated Binder: {}", bytesToHexWithSpaces(binderVal));
+                        LOGGER.debug(
+                                "[DEBUG] Calculated Binder: {}", bytesToHexWithSpaces(binderVal));
 
                         msg.getBinders().get(x).setBinderEntry(binderVal);
                         // First entry = PSK for early Data

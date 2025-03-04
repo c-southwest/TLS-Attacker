@@ -49,7 +49,8 @@ public abstract class CoreClientHelloPreparator<T extends CoreClientHelloMessage
             prepareCookie(msg);
             prepareCookieLength(msg);
         }
-        if(chooser.getConfig().getHighestProtocolVersion().isDTLS13() && chooser.getContext().getTlsContext().getExtensionCookie() != null) {
+        if (chooser.getConfig().getHighestProtocolVersion().isDTLS13()
+                && chooser.getContext().getTlsContext().getExtensionCookie() != null) {
             chooser.getConfig().setAddCookieExtension(true);
             msg.addExtension(0, new CookieExtensionMessage());
         }

@@ -73,7 +73,7 @@ public class PSKIdentityPreparator extends Preparator<PSKIdentity> {
                             + ticketAge
                             + " - Using empty obfuscated ticket age instead",
                     e);
-            return new byte[]{0,0,0,0};
+            return new byte[] {0, 0, 0, 0};
         }
     }
 }
