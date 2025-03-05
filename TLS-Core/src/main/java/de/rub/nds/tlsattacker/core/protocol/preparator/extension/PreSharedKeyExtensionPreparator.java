@@ -208,7 +208,7 @@ public class PreSharedKeyExtensionPreparator
                                         earlySecret,
                                         labelIn,
                                         ArrayConverter.hexStringToByteArray(""),
-                                        true);
+                                        chooser.getHighestProtocolVersion().isDTLS13());
 
                         LOGGER.debug("[DEBUG] binderFinKey expandLabel parameters:");
                         LOGGER.debug("[DEBUG]   - hkdfAlgorithm: {}", hkdfAlgorithm);
@@ -223,7 +223,7 @@ public class PreSharedKeyExtensionPreparator
                                         HKDFunction.FINISHED,
                                         new byte[0],
                                         mac.getMacLength(),
-                                        true);
+                                        chooser.getHighestProtocolVersion().isDTLS13());
                         LOGGER.debug("[DEBUG] earlySecret: {}", bytesToHexWithSpaces(earlySecret));
                         LOGGER.debug("[DEBUG] binderKey: {}", bytesToHexWithSpaces(binderKey));
                         LOGGER.debug(

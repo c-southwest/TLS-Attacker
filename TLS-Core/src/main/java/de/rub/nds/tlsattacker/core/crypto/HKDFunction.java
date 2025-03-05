@@ -20,6 +20,8 @@ import java.security.*;
 import java.util.Arrays;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+
+import de.rub.nds.tlsattacker.core.state.Context;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.crypto.digests.SM3Digest;
@@ -28,6 +30,8 @@ import org.bouncycastle.crypto.params.KeyParameter;
 
 /** HKDF functions computation for TLS 1.3 */
 public class HKDFunction {
+
+    public static Context context;
 
     public static final String KEY = "key";
 
@@ -247,7 +251,7 @@ public class HKDFunction {
             throw new CryptoException("Could not initialize HKDF", ex);
         }
     }
-    // TODO: we should remove this, so we know exactly when to use DTLS 1.3 or TLS 1.3 format
+
     public static byte[] deriveSecret(
             HKDFAlgorithm hkdfAlgorithm,
             String hashAlgorithm,
@@ -255,7 +259,8 @@ public class HKDFunction {
             String labelIn,
             byte[] toHash)
             throws CryptoException {
-        return deriveSecret(hkdfAlgorithm, hashAlgorithm, prk, labelIn, toHash, false);
+        boolean isDtls13 = context.getConfig().getHighestProtocolVersion().isDTLS13();
+        return deriveSecret(hkdfAlgorithm, hashAlgorithm, prk, labelIn, toHash, isDtls13);
     }
 
     static byte[] deriveSecret(
@@ -300,11 +305,11 @@ public class HKDFunction {
         return expand(hkdfAlgorithm, prk, info, outLen);
     }
 
-    // TODO: we should remove this, so we know exactly when to use DTLS 1.3 or TLS 1.3
     public static byte[] expandLabel(
             HKDFAlgorithm hkdfAlgorithm, byte[] prk, String labelIn, byte[] hashValue, int outLen)
             throws CryptoException {
-        return expandLabel(hkdfAlgorithm, prk, labelIn, hashValue, outLen, false);
+        boolean isDtls13 = context.getConfig().getHighestProtocolVersion().isDTLS13();
+        return expandLabel(hkdfAlgorithm, prk, labelIn, hashValue, outLen, isDtls13);
     }
 
     private HKDFunction() {}

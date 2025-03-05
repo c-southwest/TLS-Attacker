@@ -11,6 +11,7 @@ package de.rub.nds.tlsattacker.core.state;
 import de.rub.nds.tlsattacker.core.config.Config;
 import de.rub.nds.tlsattacker.core.connection.AliasedConnection;
 import de.rub.nds.tlsattacker.core.constants.ChooserType;
+import de.rub.nds.tlsattacker.core.crypto.HKDFunction;
 import de.rub.nds.tlsattacker.core.layer.LayerStack;
 import de.rub.nds.tlsattacker.core.layer.LayerStackFactory;
 import de.rub.nds.tlsattacker.core.layer.constant.StackConfiguration;
@@ -64,6 +65,7 @@ public class Context {
         this.config = state.getConfig();
         this.chooser = ChooserFactory.getChooser(ChooserType.DEFAULT, this, config);
         this.connection = connection;
+        HKDFunction.context = this;
         prepareWithLayers(config.getDefaultLayerConfiguration());
     }
 
