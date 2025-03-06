@@ -41,6 +41,14 @@ import java.util.Objects;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Record extends ModifiableVariableHolder implements DataContainer {
 
+    // For DTLS 1.3
+    @ModifiableVariableProperty(type = ModifiableVariableProperty.Type.NONE)
+    private ModifiableByte unifiedHeaderBitmask;
+
+    // For DTLS 1.3
+    @ModifiableVariableProperty(type = ModifiableVariableProperty.Type.COUNT)
+    private ModifiableInteger sequenceNumberSuffix;
+
     @XmlTransient protected boolean shouldPrepareDefault = true;
 
     /** maximum length configuration for this record */
@@ -276,6 +284,30 @@ public class Record extends ModifiableVariableHolder implements DataContainer {
         if (computations == null) {
             this.computations = new RecordCryptoComputations();
         }
+    }
+
+    public ModifiableByte getUnifiedHeaderBitmask() {
+        return unifiedHeaderBitmask;
+    }
+
+    public void setUnifiedHeaderBitmask(ModifiableByte unifiedHeaderBitmask) {
+        this.unifiedHeaderBitmask = unifiedHeaderBitmask;
+    }
+
+    public void setUnifiedHeaderBitmask(byte unifiedHeaderBitmask) {
+        this.unifiedHeaderBitmask = ModifiableVariableFactory.safelySetValue(this.unifiedHeaderBitmask, unifiedHeaderBitmask);
+    }
+
+    public ModifiableInteger getSequenceNumberSuffix() {
+        return sequenceNumberSuffix;
+    }
+
+    public void setSequenceNumberSuffix(ModifiableInteger sequenceNumberSuffix) {
+        this.sequenceNumberSuffix = sequenceNumberSuffix;
+    }
+
+    public void setSequenceNumberSuffix(int sequenceNumberSuffix) {
+        this.sequenceNumberSuffix = ModifiableVariableFactory.safelySetValue(this.sequenceNumberSuffix, sequenceNumberSuffix);
     }
 
     @Override
