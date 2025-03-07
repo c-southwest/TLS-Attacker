@@ -8,6 +8,8 @@
  */
 package de.rub.nds.tlsattacker.core.record.cipher.cryptohelper;
 
+import static de.rub.nds.tlsattacker.core.util.LoggerPrintConverter.bytesToHexWithSpaces;
+
 import de.rub.nds.modifiablevariable.util.ArrayConverter;
 import de.rub.nds.protocol.constants.MacAlgorithm;
 import de.rub.nds.tlsattacker.core.constants.AlgorithmResolver;
@@ -85,7 +87,7 @@ public class KeyDerivator {
     public static KeySet generateKeySet(
             TlsContext tlsContext, ProtocolVersion protocolVersion, Tls13KeySetType keySetType)
             throws NoSuchAlgorithmException, CryptoException {
-        if (protocolVersion.isTLS13()) {
+        if (protocolVersion.isTLS13() || protocolVersion.isDTLS13()) {
             return getTls13KeySet(tlsContext, keySetType);
         } else {
             return getTlsKeySet(tlsContext);
@@ -129,7 +131,7 @@ public class KeyDerivator {
                     throw new CryptoException("Unknown KeySetType:" + keySetType.name());
             }
         }
-        LOGGER.debug("ActiveKeySetType is {}", keySetType);
+        LOGGER.debug("[DEBUG] ActiveKeySetType is {}", keySetType);
         CipherAlgorithm cipherAlg = cipherSuite.getCipherAlgorithm();
         KeySet keySet = new KeySet(keySetType);
         HKDFAlgorithm hkdfAlgorithm = AlgorithmResolver.getHKDFAlgorithm(cipherSuite);
@@ -140,7 +142,8 @@ public class KeyDerivator {
                         HKDFunction.KEY,
                         new byte[] {},
                         cipherAlg.getKeySize()));
-        LOGGER.debug("Client write key: {}", keySet.getClientWriteKey());
+        LOGGER.debug(
+                "[DEBUG] Client write key: {}", bytesToHexWithSpaces(keySet.getClientWriteKey()));
         keySet.setServerWriteKey(
                 HKDFunction.expandLabel(
                         hkdfAlgorithm,
@@ -148,7 +151,8 @@ public class KeyDerivator {
                         HKDFunction.KEY,
                         new byte[] {},
                         cipherAlg.getKeySize()));
-        LOGGER.debug("Server write key: {}", keySet.getServerWriteKey());
+        LOGGER.debug(
+                "[DEBUG] Server write key: {}", bytesToHexWithSpaces(keySet.getServerWriteKey()));
         keySet.setClientWriteIv(
                 HKDFunction.expandLabel(
                         hkdfAlgorithm,
@@ -156,7 +160,8 @@ public class KeyDerivator {
                         HKDFunction.IV,
                         new byte[] {},
                         AEAD_IV_LENGTH));
-        LOGGER.debug("Client write IV: {}", keySet.getClientWriteIv());
+        LOGGER.debug(
+                "[DEBUG] Client write IV: {}", bytesToHexWithSpaces(keySet.getClientWriteIv()));
         keySet.setServerWriteIv(
                 HKDFunction.expandLabel(
                         hkdfAlgorithm,
@@ -164,9 +169,32 @@ public class KeyDerivator {
                         HKDFunction.IV,
                         new byte[] {},
                         AEAD_IV_LENGTH));
-        LOGGER.debug("Server write IV: {}", keySet.getServerWriteIv());
+        LOGGER.debug(
+                "[DEBUG] Server write IV: {}", bytesToHexWithSpaces(keySet.getServerWriteIv()));
         keySet.setServerWriteMacSecret(new byte[0]);
         keySet.setClientWriteMacSecret(new byte[0]);
+
+        if (tlsContext.getChooser().getSelectedProtocolVersion().isDTLS13()) {
+            try {
+                byte[] clientSnKey =
+                        HKDFunction.expandLabel(hkdfAlgorithm, clientSecret, "sn", new byte[0], 16);
+                keySet.setClientWriteSnKey(clientSnKey);
+                LOGGER.debug("[DEBUG] Set clientWriteSnKey with length: {}", clientSnKey.length);
+                LOGGER.debug(
+                        "[DEBUG] Set clientWriteSnKey : {}", bytesToHexWithSpaces(clientSnKey));
+
+                byte[] serverSnKey =
+                        HKDFunction.expandLabel(hkdfAlgorithm, serverSecret, "sn", new byte[0], 16);
+                keySet.setServerWriteSnKey(serverSnKey);
+                LOGGER.debug("[DEBUG] Set serverWriteSnKey with length: {}", serverSnKey.length);
+                LOGGER.debug(
+                        "[DEBUG] Set serverWriteSnKey : {}", bytesToHexWithSpaces(serverSnKey));
+
+            } catch (Exception ex) {
+                LOGGER.error("Failed to derive sequence number keys", ex);
+            }
+        }
+
         return keySet;
     }
 

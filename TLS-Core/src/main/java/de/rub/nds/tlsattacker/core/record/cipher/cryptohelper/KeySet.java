@@ -24,6 +24,41 @@ public class KeySet {
     private byte[] clientWriteIv;
     private byte[] serverWriteIv;
 
+    private byte[] clientWriteSnKey;
+    private byte[] serverWriteSnKey;
+
+    public byte[] getClientWriteSnKey() {
+        return clientWriteSnKey;
+    }
+
+    public void setClientWriteSnKey(byte[] clientWriteSnKey) {
+        this.clientWriteSnKey = clientWriteSnKey;
+    }
+
+    public byte[] getServerWriteSnKey() {
+        return serverWriteSnKey;
+    }
+
+    public void setServerWriteSnKey(byte[] serverWriteSnKey) {
+        this.serverWriteSnKey = serverWriteSnKey;
+    }
+
+    public byte[] getWriteSnKey(ConnectionEndType connectionEndType) {
+        if (connectionEndType == ConnectionEndType.CLIENT) {
+            return clientWriteSnKey;
+        } else {
+            return serverWriteSnKey;
+        }
+    }
+
+    public byte[] getReadSnKey(ConnectionEndType connectionEndType) {
+        if (connectionEndType == ConnectionEndType.SERVER) {
+            return clientWriteSnKey;
+        } else {
+            return serverWriteSnKey;
+        }
+    }
+
     private Tls13KeySetType keySetType = Tls13KeySetType.NONE;
 
     public KeySet() {}
