@@ -295,7 +295,9 @@ public class Record extends ModifiableVariableHolder implements DataContainer {
     }
 
     public void setUnifiedHeaderBitmask(byte unifiedHeaderBitmask) {
-        this.unifiedHeaderBitmask = ModifiableVariableFactory.safelySetValue(this.unifiedHeaderBitmask, unifiedHeaderBitmask);
+        this.unifiedHeaderBitmask =
+                ModifiableVariableFactory.safelySetValue(
+                        this.unifiedHeaderBitmask, unifiedHeaderBitmask);
     }
 
     public ModifiableInteger getSequenceNumberSuffix() {
@@ -307,7 +309,9 @@ public class Record extends ModifiableVariableHolder implements DataContainer {
     }
 
     public void setSequenceNumberSuffix(int sequenceNumberSuffix) {
-        this.sequenceNumberSuffix = ModifiableVariableFactory.safelySetValue(this.sequenceNumberSuffix, sequenceNumberSuffix);
+        this.sequenceNumberSuffix =
+                ModifiableVariableFactory.safelySetValue(
+                        this.sequenceNumberSuffix, sequenceNumberSuffix);
     }
 
     @Override
