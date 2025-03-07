@@ -9,9 +9,7 @@
 package de.rub.nds.tlsattacker.core.record.cipher;
 
 import de.rub.nds.modifiablevariable.util.ArrayConverter;
-import de.rub.nds.tlsattacker.core.constants.ProtocolMessageType;
-import de.rub.nds.tlsattacker.core.constants.ProtocolVersion;
-import de.rub.nds.tlsattacker.core.constants.RecordByteLength;
+import de.rub.nds.tlsattacker.core.constants.*;
 import de.rub.nds.tlsattacker.core.crypto.cipher.DecryptionCipher;
 import de.rub.nds.tlsattacker.core.crypto.cipher.EncryptionCipher;
 import de.rub.nds.tlsattacker.core.exceptions.CryptoException;
@@ -100,6 +98,33 @@ public abstract class RecordCipher {
                                     record.getCleanProtocolMessageBytes().getValue().length,
                                     RecordByteLength.RECORD_LENGTH));
                 }
+                return stream.toByteArray();
+            } else if (record.getUnifiedHeaderBitmask() != null) {
+                // DTLS 1.3 Unified Header
+                byte unifiedHeaderBitmask = record.getUnifiedHeaderBitmask().getValue();
+                stream.write(unifiedHeaderBitmask);
+                int seqNumLength = ((unifiedHeaderBitmask & 0x08) != 0) ? 2 : 1;
+
+                int decryptedSeqNum = record.getSequenceNumber().getValue().intValue();
+                LOGGER.debug(
+                        "[DEBUG] Using decrypted sequence number for AAD: {}", decryptedSeqNum);
+
+                if (seqNumLength == 2) {
+                    stream.write((decryptedSeqNum >> 8) & 0xFF);
+                    stream.write(decryptedSeqNum & 0xFF);
+                } else {
+                    stream.write(decryptedSeqNum & 0xFF);
+                }
+
+                if ((unifiedHeaderBitmask & 0x04) != 0 && record.getLength() != null) {
+                    int length = record.getLength().getValue();
+                    stream.write((length >> 8) & 0xFF);
+                    stream.write(length & 0xFF);
+                }
+
+                LOGGER.debug(
+                        "[DEBUG] DTLS 1.3 AAD constructed: {}",
+                        ArrayConverter.bytesToHexString(stream.toByteArray()));
                 return stream.toByteArray();
             } else {
                 if (protocolVersion.isDTLS()) {

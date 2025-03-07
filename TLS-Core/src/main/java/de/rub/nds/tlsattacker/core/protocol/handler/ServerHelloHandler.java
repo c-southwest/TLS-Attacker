@@ -90,7 +90,8 @@ public class ServerHelloHandler extends HandshakeMessageHandler<ServerHelloMessa
         adjustExtensions(message);
         warnOnConflictingExtensions();
         if (!message.isTls13HelloRetryRequest()) {
-            if (tlsContext.getChooser().getSelectedProtocolVersion().isTLS13()) {
+            if (tlsContext.getChooser().getSelectedProtocolVersion().isTLS13()
+                    || tlsContext.getChooser().getSelectedProtocolVersion().isDTLS13()) {
                 KeyShareStoreEntry keyShareStoreEntry = adjustKeyShareStoreEntry();
                 adjustHandshakeTrafficSecrets(keyShareStoreEntry);
                 if (tlsContext.getTalkingConnectionEndType()
@@ -279,6 +280,9 @@ public class ServerHelloHandler extends HandshakeMessageHandler<ServerHelloMessa
                             ? tlsContext.getChooser().getPsk()
                             : new byte[macLength]; // use PSK if available
             byte[] earlySecret = HKDFunction.extract(hkdfAlgorithm, new byte[0], psk);
+            LOGGER.debug(
+                    "[DEBUG] adjustHandshakeTrafficSecrets() earlySecret: {}",
+                    bytesToHexWithSpaces(earlySecret));
             byte[] saltHandshakeSecret =
                     HKDFunction.deriveSecret(
                             hkdfAlgorithm,
@@ -286,6 +290,10 @@ public class ServerHelloHandler extends HandshakeMessageHandler<ServerHelloMessa
                             earlySecret,
                             HKDFunction.DERIVED,
                             new byte[0]);
+            LOGGER.debug(
+                    "[DEBUG] adjustHandshakeTrafficSecrets() saltHandshakeSecret: {}",
+                    bytesToHexWithSpaces(saltHandshakeSecret));
+
             byte[] sharedSecret;
             BigInteger privateKey =
                     tlsContext
@@ -305,8 +313,14 @@ public class ServerHelloHandler extends HandshakeMessageHandler<ServerHelloMessa
                     sharedSecret = tlsContext.getConfig().getDefaultPreMasterSecret();
                 }
             }
+            LOGGER.debug(
+                    "[DEBUG] adjustHandshakeTrafficSecrets() sharedSecret: {}",
+                    bytesToHexWithSpaces(sharedSecret));
             byte[] handshakeSecret =
                     HKDFunction.extract(hkdfAlgorithm, saltHandshakeSecret, sharedSecret);
+            LOGGER.debug(
+                    "[DEBUG] adjustHandshakeTrafficSecrets() handshakeSecret: {}",
+                    bytesToHexWithSpaces(handshakeSecret));
             tlsContext.setHandshakeSecret(handshakeSecret);
             LOGGER.debug("Set handshakeSecret in Context to {}", handshakeSecret);
             byte[] clientHandshakeTrafficSecret =
@@ -316,6 +330,9 @@ public class ServerHelloHandler extends HandshakeMessageHandler<ServerHelloMessa
                             handshakeSecret,
                             HKDFunction.CLIENT_HANDSHAKE_TRAFFIC_SECRET,
                             tlsContext.getDigest().getRawBytes());
+            LOGGER.debug(
+                    "[DEBUG] adjustHandshakeTrafficSecrets() clientHandshakeTrafficSecret: {}",
+                    bytesToHexWithSpaces(clientHandshakeTrafficSecret));
             tlsContext.setClientHandshakeTrafficSecret(clientHandshakeTrafficSecret);
             LOGGER.debug(
                     "Set clientHandshakeTrafficSecret in Context to {}",
@@ -327,6 +344,9 @@ public class ServerHelloHandler extends HandshakeMessageHandler<ServerHelloMessa
                             handshakeSecret,
                             HKDFunction.SERVER_HANDSHAKE_TRAFFIC_SECRET,
                             tlsContext.getDigest().getRawBytes());
+            LOGGER.debug(
+                    "[DEBUG] adjustHandshakeTrafficSecrets() serverHandshakeTrafficSecret: {}",
+                    bytesToHexWithSpaces(serverHandshakeTrafficSecret));
             tlsContext.setServerHandshakeTrafficSecret(serverHandshakeTrafficSecret);
             LOGGER.debug(
                     "Set serverHandshakeTrafficSecret in Context to {}",

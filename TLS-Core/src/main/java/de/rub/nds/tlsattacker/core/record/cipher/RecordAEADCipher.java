@@ -8,6 +8,8 @@
  */
 package de.rub.nds.tlsattacker.core.record.cipher;
 
+import static de.rub.nds.tlsattacker.core.util.LoggerPrintConverter.bytesToHexWithSpaces;
+
 import de.rub.nds.modifiablevariable.util.ArrayConverter;
 import de.rub.nds.protocol.exception.ParserException;
 import de.rub.nds.tlsattacker.core.constants.Bits;
@@ -219,76 +221,42 @@ public class RecordAEADCipher extends RecordCipher {
                 .setCipherKey(getState().getKeySet().getReadKey(getConnectionEndType()));
 
         byte[] protocolBytes = record.getProtocolMessageBytes().getValue();
+        LOGGER.debug("[DEBUG] protocolBytes: {}", bytesToHexWithSpaces(protocolBytes));
         PlaintextParser parser = new PlaintextParser(protocolBytes);
-        try {
-            byte[] explicitNonce = parser.parseByteArrayField(aeadExplicitLength);
-            record.getComputations().setExplicitNonce(explicitNonce);
-            explicitNonce = record.getComputations().getExplicitNonce().getValue();
-
+        if (record.getUnifiedHeaderBitmask() != null) {
+            // DTLS 1.3 Unified Header
             byte[] salt = getState().getKeySet().getReadIv(getLocalConnectionEndType());
             record.getComputations().setAeadSalt(salt);
-            salt = record.getComputations().getAeadSalt().getValue();
+            LOGGER.debug("[DEBUG] Salt for DTLS 1.3: {}", bytesToHexWithSpaces(salt));
 
-            byte[] cipherTextOnly =
-                    parser.parseByteArrayField(parser.getBytesLeft() - aeadTagLength);
+            byte[] explicitNonce = new byte[0];
+            record.getComputations().setExplicitNonce(explicitNonce);
+
+            byte[] cipherTextOnly = new byte[protocolBytes.length - aeadTagLength];
+            byte[] authenticationTag = new byte[aeadTagLength];
+
+            System.arraycopy(protocolBytes, 0, cipherTextOnly, 0, cipherTextOnly.length);
+            System.arraycopy(
+                    protocolBytes, cipherTextOnly.length, authenticationTag, 0, aeadTagLength);
+
             record.getComputations().setCiphertext(cipherTextOnly);
-            record.getComputations()
-                    .setAuthenticatedNonMetaData(
-                            record.getComputations().getCiphertext().getValue());
+            record.getComputations().setAuthenticationTag(authenticationTag);
+            record.getComputations().setAuthenticatedNonMetaData(cipherTextOnly);
+
+            LOGGER.debug("[DEBUG] Cipher text: {}", bytesToHexWithSpaces(cipherTextOnly));
+            LOGGER.debug("[DEBUG] Authentication tag: {}", bytesToHexWithSpaces(authenticationTag));
 
             byte[] additionalAuthenticatedData =
                     collectAdditionalAuthenticatedData(record, getState().getVersion());
             record.getComputations().setAuthenticatedMetaData(additionalAuthenticatedData);
-            additionalAuthenticatedData =
-                    record.getComputations().getAuthenticatedMetaData().getValue();
+            LOGGER.debug(
+                    "[DEBUG] Additional authenticated data: {}",
+                    bytesToHexWithSpaces(additionalAuthenticatedData));
 
-            LOGGER.debug("Decrypting AEAD with the following AAD: {}", additionalAuthenticatedData);
-
-            byte[] gcmNonce = ArrayConverter.concatenate(salt, explicitNonce);
-
-            // Nonce construction is different for chacha & tls1.3
-            if (getState().getVersion().isTLS13()) {
-                gcmNonce =
-                        preprocessIv(record.getSequenceNumber().getValue().longValue(), gcmNonce);
-            } else if (getState().getCipherAlg() == CipherAlgorithm.CHACHA20_POLY1305) {
-                if (getState().getVersion().isDTLS()) {
-                    gcmNonce =
-                            preprocessIvforDtls(
-                                    record.getEpoch().getValue(),
-                                    record.getSequenceNumber().getValue().longValue(),
-                                    gcmNonce);
-                } else {
-                    gcmNonce =
-                            preprocessIv(
-                                    record.getSequenceNumber().getValue().longValue(), gcmNonce);
-                }
-            } else if (getState().getCipherAlg() == CipherAlgorithm.UNOFFICIAL_CHACHA20_POLY1305) {
-                if (getState().getVersion().isDTLS()) {
-                    gcmNonce =
-                            ArrayConverter.concatenate(
-                                    ArrayConverter.intToBytes(
-                                            record.getEpoch().getValue(),
-                                            RecordByteLength.DTLS_EPOCH),
-                                    ArrayConverter.longToUint48Bytes(
-                                            record.getSequenceNumber().getValue().longValue()));
-                } else {
-                    gcmNonce =
-                            ArrayConverter.longToUint64Bytes(
-                                    record.getSequenceNumber().getValue().longValue());
-                }
-            }
+            byte[] gcmNonce;
+            gcmNonce = preprocessIv(record.getSequenceNumber().getValue().longValue(), salt);
             record.getComputations().setGcmNonce(gcmNonce);
-            gcmNonce = record.getComputations().getGcmNonce().getValue();
-
-            LOGGER.debug("Decrypting AEAD with the following IV: {}", gcmNonce);
-
-            byte[] authenticationTag = parser.parseByteArrayField(parser.getBytesLeft());
-
-            record.getComputations().setAuthenticationTag(authenticationTag);
-            authenticationTag = record.getComputations().getAuthenticationTag().getValue();
-            // TODO it would be better if we had a separate CM implementation to do
-            // the decryption
-
+            LOGGER.debug("[DEBUG] GCM nonce for decryption: {}", bytesToHexWithSpaces(gcmNonce));
             try {
                 byte[] plainRecordBytes =
                         decryptCipher.decrypt(
@@ -296,31 +264,124 @@ public class RecordAEADCipher extends RecordCipher {
                                 aeadTagLength * Bits.IN_A_BYTE,
                                 additionalAuthenticatedData,
                                 ArrayConverter.concatenate(cipherTextOnly, authenticationTag));
-
+                LOGGER.debug(
+                        "[DEBUG] plainRecordBytes: {}", bytesToHexWithSpaces(plainRecordBytes));
                 record.getComputations().setAuthenticationTagValid(true);
                 record.getComputations().setPlainRecordBytes(plainRecordBytes);
                 plainRecordBytes = record.getComputations().getPlainRecordBytes().getValue();
-                if (getState().getVersion().isTLS13()
-                        || (getState().getVersion().isDTLS()
-                                && record.getContentMessageType()
-                                        == ProtocolMessageType.TLS12_CID)) {
-                    parseEncapsulatedRecordBytes(plainRecordBytes, record);
-                } else {
-                    record.setCleanProtocolMessageBytes(plainRecordBytes);
-                }
+                parseEncapsulatedRecordBytes(plainRecordBytes, record);
             } catch (CryptoException e) {
-                LOGGER.warn("Tag invalid", e);
+                LOGGER.warn("decrypt failed ", e);
                 record.getComputations().setAuthenticationTagValid(false);
                 throw new CryptoException(e);
             }
-        } catch (ParserException e) {
-            LOGGER.warn("Could not find all components (iv, ciphertext, tag) in record.");
-            LOGGER.warn(
-                    "This is probably us having the wrong keys. Depending on the application this may be fine.");
-            LOGGER.warn("Setting clean bytes to protocol message bytes.");
-            record.setCleanProtocolMessageBytes(record.getProtocolMessageBytes());
+        } else {
+            try {
+                byte[] explicitNonce = parser.parseByteArrayField(aeadExplicitLength);
+                record.getComputations().setExplicitNonce(explicitNonce);
+                explicitNonce = record.getComputations().getExplicitNonce().getValue();
 
-            record.getComputations().setAuthenticationTagValid(false);
+                byte[] salt = getState().getKeySet().getReadIv(getLocalConnectionEndType());
+                record.getComputations().setAeadSalt(salt);
+                salt = record.getComputations().getAeadSalt().getValue();
+
+                byte[] cipherTextOnly =
+                        parser.parseByteArrayField(parser.getBytesLeft() - aeadTagLength);
+                record.getComputations().setCiphertext(cipherTextOnly);
+                record.getComputations()
+                        .setAuthenticatedNonMetaData(
+                                record.getComputations().getCiphertext().getValue());
+
+                byte[] additionalAuthenticatedData =
+                        collectAdditionalAuthenticatedData(record, getState().getVersion());
+                record.getComputations().setAuthenticatedMetaData(additionalAuthenticatedData);
+                additionalAuthenticatedData =
+                        record.getComputations().getAuthenticatedMetaData().getValue();
+
+                LOGGER.debug(
+                        "Decrypting AEAD with the following AAD: {}", additionalAuthenticatedData);
+
+                byte[] gcmNonce = ArrayConverter.concatenate(salt, explicitNonce);
+
+                // Nonce construction is different for chacha & tls1.3
+                if (getState().getVersion().isTLS13()) {
+                    gcmNonce =
+                            preprocessIv(
+                                    record.getSequenceNumber().getValue().longValue(), gcmNonce);
+                } else if (getState().getCipherAlg() == CipherAlgorithm.CHACHA20_POLY1305) {
+                    if (getState().getVersion().isDTLS()) {
+                        gcmNonce =
+                                preprocessIvforDtls(
+                                        record.getEpoch().getValue(),
+                                        record.getSequenceNumber().getValue().longValue(),
+                                        gcmNonce);
+                    } else {
+                        gcmNonce =
+                                preprocessIv(
+                                        record.getSequenceNumber().getValue().longValue(),
+                                        gcmNonce);
+                    }
+                } else if (getState().getCipherAlg()
+                        == CipherAlgorithm.UNOFFICIAL_CHACHA20_POLY1305) {
+                    if (getState().getVersion().isDTLS()) {
+                        gcmNonce =
+                                ArrayConverter.concatenate(
+                                        ArrayConverter.intToBytes(
+                                                record.getEpoch().getValue(),
+                                                RecordByteLength.DTLS_EPOCH),
+                                        ArrayConverter.longToUint48Bytes(
+                                                record.getSequenceNumber().getValue().longValue()));
+                    } else {
+                        gcmNonce =
+                                ArrayConverter.longToUint64Bytes(
+                                        record.getSequenceNumber().getValue().longValue());
+                    }
+                }
+                record.getComputations().setGcmNonce(gcmNonce);
+                gcmNonce = record.getComputations().getGcmNonce().getValue();
+
+                LOGGER.debug("Decrypting AEAD with the following IV: {}", gcmNonce);
+
+                byte[] authenticationTag = parser.parseByteArrayField(parser.getBytesLeft());
+
+                record.getComputations().setAuthenticationTag(authenticationTag);
+                authenticationTag = record.getComputations().getAuthenticationTag().getValue();
+                // TODO it would be better if we had a separate CM implementation to do
+                // the decryption
+
+                try {
+                    byte[] plainRecordBytes =
+                            decryptCipher.decrypt(
+                                    gcmNonce,
+                                    aeadTagLength * Bits.IN_A_BYTE,
+                                    additionalAuthenticatedData,
+                                    ArrayConverter.concatenate(cipherTextOnly, authenticationTag));
+
+                    record.getComputations().setAuthenticationTagValid(true);
+                    record.getComputations().setPlainRecordBytes(plainRecordBytes);
+                    plainRecordBytes = record.getComputations().getPlainRecordBytes().getValue();
+                    if (getState().getVersion().isTLS13()
+                            || (getState().getVersion().isDTLS()
+                                    && record.getContentMessageType()
+                                            == ProtocolMessageType.TLS12_CID)) {
+                        parseEncapsulatedRecordBytes(plainRecordBytes, record);
+                    } else {
+                        record.setCleanProtocolMessageBytes(plainRecordBytes);
+                    }
+                } catch (CryptoException e) {
+                    LOGGER.warn("Tag invalid", e);
+                    record.getComputations().setAuthenticationTagValid(false);
+                    throw new CryptoException(e);
+                }
+            } catch (ParserException e) {
+                LOGGER.warn("Could not find all components (iv, ciphertext, tag) in record.");
+                LOGGER.warn(
+                        "This is probably us having the wrong keys. Depending on the application this may be fine.");
+                LOGGER.warn("Setting clean bytes to protocol message bytes.");
+                record.setCleanProtocolMessageBytes(record.getProtocolMessageBytes());
+
+                record.getComputations().setAuthenticationTagValid(false);
+            }
         }
     }
 
