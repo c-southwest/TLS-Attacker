@@ -44,9 +44,7 @@ public class RecordDecryptor extends Decryptor {
     public void decrypt(Record record) throws ParserException {
         LOGGER.debug("Decrypting Record");
         RecordCipher recordCipher;
-        if (tlsContext.getChooser().getSelectedProtocolVersion().isDTLS13()) {
-            recordCipher = getRecordMostRecentCipher();
-        } else if (tlsContext.getChooser().getSelectedProtocolVersion().isDTLS()
+        if (tlsContext.getChooser().getSelectedProtocolVersion().isDTLS()
                 && record.getEpoch() != null
                 && record.getEpoch().getValue() != null) {
             recordCipher = getRecordCipher(record.getEpoch().getValue());
@@ -102,7 +100,7 @@ public class RecordDecryptor extends Decryptor {
             throw new CryptoException("Ciphertext too short for sequence number decryption");
         }
 
-        RecordCipher recordCipher = getRecordMostRecentCipher();
+        RecordCipher recordCipher = getRecordCipher(record.getEpoch().getValue());
         CipherSuite cipherSuite = recordCipher.getState().getCipherSuite();
         LOGGER.debug(
                 "[DEBUG] Decrypting sequence number for record with epoch: {}",
