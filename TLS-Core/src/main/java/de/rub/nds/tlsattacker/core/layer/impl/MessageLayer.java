@@ -32,15 +32,7 @@ import de.rub.nds.tlsattacker.core.protocol.ProtocolMessage;
 import de.rub.nds.tlsattacker.core.protocol.ProtocolMessageHandler;
 import de.rub.nds.tlsattacker.core.protocol.ProtocolMessageSerializer;
 import de.rub.nds.tlsattacker.core.protocol.handler.HandshakeMessageHandler;
-import de.rub.nds.tlsattacker.core.protocol.message.AlertMessage;
-import de.rub.nds.tlsattacker.core.protocol.message.ApplicationMessage;
-import de.rub.nds.tlsattacker.core.protocol.message.ChangeCipherSpecMessage;
-import de.rub.nds.tlsattacker.core.protocol.message.ClientHelloMessage;
-import de.rub.nds.tlsattacker.core.protocol.message.HandshakeMessage;
-import de.rub.nds.tlsattacker.core.protocol.message.HeartbeatMessage;
-import de.rub.nds.tlsattacker.core.protocol.message.ServerHelloMessage;
-import de.rub.nds.tlsattacker.core.protocol.message.UnknownHandshakeMessage;
-import de.rub.nds.tlsattacker.core.protocol.message.UnknownMessage;
+import de.rub.nds.tlsattacker.core.protocol.message.*;
 import de.rub.nds.tlsattacker.core.protocol.parser.HandshakeMessageParser;
 import de.rub.nds.tlsattacker.core.state.Context;
 import de.rub.nds.tlsattacker.transport.ConnectionEndType;
@@ -296,6 +288,9 @@ public class MessageLayer extends ProtocolLayer<LayerProcessingHint, ProtocolMes
             case HEARTBEAT:
                 readHeartbeatProtocolData();
                 break;
+            case Acknowledgement:
+                readAcknowledgementProtocolData();
+                break;
             case UNKNOWN:
                 readUnknownProtocolData();
                 break;
@@ -306,6 +301,11 @@ public class MessageLayer extends ProtocolLayer<LayerProcessingHint, ProtocolMes
                         (hint.getType() == null ? "null" : hint.getType()));
                 break;
         }
+    }
+
+    private void readAcknowledgementProtocolData() {
+        AcknowledgementMessage message = new AcknowledgementMessage();
+        readDataContainer(message, context);
     }
 
     private void readAlertProtocolData() {
