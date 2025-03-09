@@ -137,10 +137,10 @@ public class RecordAEADCipher extends RecordCipher {
 
     @Override
     public void encrypt(Record record) throws CryptoException {
-        LOGGER.debug("Encrypting Record");
+        LOGGER.debug("[DEBUG] Encrypting Record");
         record.getComputations()
                 .setCipherKey(getState().getKeySet().getWriteKey(getConnectionEndType()));
-        if (getState().getVersion().isTLS13()) {
+        if (getState().getVersion().isTLS13() || getState().getVersion().isDTLS13()) {
             int additionalPadding = getDefaultAdditionalPadding();
             if (additionalPadding > 65536) {
                 LOGGER.warn("Additional padding is too big. setting it to max possible value");
@@ -168,17 +168,28 @@ public class RecordAEADCipher extends RecordCipher {
         }
 
         byte[] explicitNonce = prepareEncryptionExplicitNonce(record);
+        if (getState().getVersion().isDTLS13()) {
+            explicitNonce = new byte[0];
+        }
         byte[] aeadSalt = prepareEncryptionAeadSalt(record);
         byte[] gcmNonce = prepareEncryptionGcmNonce(aeadSalt, explicitNonce, record);
 
-        LOGGER.debug("Encrypting AEAD with the following IV: {}", gcmNonce);
+        LOGGER.debug(
+                "[DEBUG] Encrypting AEAD with explicitNonce: {}",
+                bytesToHexWithSpaces(explicitNonce));
+        LOGGER.debug("[DEBUG] Encrypting AEAD with aeadSalt: {}", bytesToHexWithSpaces(aeadSalt));
+        LOGGER.debug(
+                "[DEBUG] Encrypting AEAD with the following IV/gcmNonce: {}",
+                bytesToHexWithSpaces(gcmNonce));
         byte[] additionalAuthenticatedData =
                 collectAdditionalAuthenticatedData(record, getState().getVersion());
         record.getComputations().setAuthenticatedMetaData(additionalAuthenticatedData);
         additionalAuthenticatedData =
                 record.getComputations().getAuthenticatedMetaData().getValue();
 
-        LOGGER.debug("Encrypting AEAD with the following AAD: {}", additionalAuthenticatedData);
+        LOGGER.debug(
+                "[DEBUG] Encrypting AEAD with the following AAD: {}",
+                bytesToHexWithSpaces(additionalAuthenticatedData));
 
         byte[] plainBytes = record.getComputations().getPlainRecordBytes().getValue();
         byte[] wholeCipherText =
@@ -194,6 +205,7 @@ public class RecordAEADCipher extends RecordCipher {
         byte[] onlyCiphertext =
                 Arrays.copyOfRange(wholeCipherText, 0, wholeCipherText.length - aeadTagLength);
 
+        LOGGER.debug("[DEBUG] onlyCiphertext: {}", bytesToHexWithSpaces(onlyCiphertext));
         record.getComputations().setAuthenticatedNonMetaData(onlyCiphertext);
 
         byte[] authenticationTag =
@@ -202,6 +214,7 @@ public class RecordAEADCipher extends RecordCipher {
                         wholeCipherText.length - aeadTagLength,
                         wholeCipherText.length);
 
+        LOGGER.debug("[DEBUG] authenticationTag: {}", bytesToHexWithSpaces(authenticationTag));
         record.getComputations().setAuthenticationTag(authenticationTag);
         authenticationTag = record.getComputations().getAuthenticationTag().getValue();
 
@@ -210,7 +223,11 @@ public class RecordAEADCipher extends RecordCipher {
 
         record.setProtocolMessageBytes(
                 ArrayConverter.concatenate(explicitNonce, onlyCiphertext, authenticationTag));
-        // TODO our own authentication tags are always valid
+        LOGGER.debug(
+                "[DEBUG] setProtocolMessageBytes: {}",
+                bytesToHexWithSpaces(
+                        ArrayConverter.concatenate(
+                                explicitNonce, onlyCiphertext, authenticationTag)));
         record.getComputations().setAuthenticationTagValid(true);
     }
 

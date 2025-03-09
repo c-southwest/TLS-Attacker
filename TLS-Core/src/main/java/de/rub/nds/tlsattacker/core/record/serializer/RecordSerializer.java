@@ -27,18 +27,45 @@ public class RecordSerializer extends Serializer<Record> {
     @Override
     protected byte[] serializeBytes() {
         LOGGER.debug("Serializing Record");
-        writeContentType(record);
-        writeProtocolVersion(record);
-        if (record.getEpoch() != null) {
-            writeEpoch(record);
-            writeSequenceNumber(record);
+        if (record.getUnifiedHeaderBitmask() != null) {
+            // this record is version DTLS 1.3
+            writeUnifiedHeader();
+            writeProtocolMessageBytes(record);
+        } else {
+            writeContentType(record);
+            writeProtocolVersion(record);
+            if (record.getEpoch() != null) {
+                writeEpoch(record);
+                writeSequenceNumber(record);
+            }
+            if (record.getConnectionId() != null) {
+                writeConnectionId(record);
+            }
+            writeLength(record);
+            writeProtocolMessageBytes(record);
         }
-        if (record.getConnectionId() != null) {
+
+        return getAlreadySerialized();
+    }
+
+    private void writeUnifiedHeader() {
+        byte bitmask = record.getUnifiedHeaderBitmask().getValue();
+        appendByte(bitmask);
+        LOGGER.debug("[DEBUG] write Unified Header Bitmask: {}", bitmask);
+
+        if ((bitmask & 0x10) != 0 && record.getConnectionId() != null) {
             writeConnectionId(record);
         }
-        writeLength(record);
-        writeProtocolMessageBytes(record);
-        return getAlreadySerialized();
+
+        int seqNumLength = ((bitmask & 0x08) != 0) ? 2 : 1;
+        appendInt(record.getSequenceNumberSuffix().getValue(), seqNumLength);
+        LOGGER.debug(
+                "[DEBUG] write Sequence Number Suffix: {}",
+                record.getSequenceNumberSuffix().getValue());
+
+        if ((bitmask & 0x04) != 0) {
+            writeLength(record);
+        }
     }
 
     private void writeContentType(Record record) {

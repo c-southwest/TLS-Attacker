@@ -51,10 +51,40 @@ public class RecordPreparator extends Preparator<Record> {
         LOGGER.debug("Preparing Record");
         prepareConnectionId(record);
         record.prepareComputations();
+
+        if (chooser.getHighestProtocolVersion().isDTLS13() && record.getEpoch().getValue() > 0) {
+            // prepare DTLS 1.3 Unified Header
+            prepareForDtls13();
+        }
         prepareContentType(record);
         prepareProtocolVersion(record);
         compressor.compress(record);
         encrypt();
+    }
+
+    private void prepareForDtls13() {
+        byte bitmask = 0x20; // 001x xxxx
+
+        if (record.getConnectionId() != null
+                && record.getConnectionId().getValue() != null
+                && record.getConnectionId().getValue().length > 0) {
+            bitmask |= 0x10;
+        }
+        bitmask |= 0x08; // S: 16 bits sequence
+        bitmask |= 0x04; // L: length field present
+
+        // epoch
+        bitmask |= (record.getEpoch().getValue() & 0x03);
+
+        record.setUnifiedHeaderBitmask(bitmask);
+        LOGGER.debug("[DEBUG] setUnifiedHeaderBitmask: {}", String.format("0x%02X", bitmask));
+
+        if (record.getSequenceNumber() != null && record.getSequenceNumber().getValue() != null) {
+            record.setSequenceNumberSuffix(
+                    record.getSequenceNumber().getValue().intValue() & 0xFFFF);
+        } else {
+            record.setSequenceNumberSuffix(0);
+        }
     }
 
     public void encrypt() {

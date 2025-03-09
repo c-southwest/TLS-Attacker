@@ -54,7 +54,8 @@ public class FinishedPreparator extends HandshakeMessagePreparator<FinishedMessa
     }
 
     private byte[] computeVerifyData() throws CryptoException {
-        if (chooser.getSelectedProtocolVersion().isTLS13()) {
+        if (chooser.getSelectedProtocolVersion().isTLS13()
+                || chooser.getSelectedProtocolVersion().isDTLS13()) {
             try {
                 HKDFAlgorithm hkdfAlgorithm =
                         AlgorithmResolver.getHKDFAlgorithm(chooser.getSelectedCipherSuite());
