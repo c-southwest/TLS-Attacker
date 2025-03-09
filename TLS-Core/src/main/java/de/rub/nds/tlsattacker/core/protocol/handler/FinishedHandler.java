@@ -42,7 +42,8 @@ public class FinishedHandler extends HandshakeMessageHandler<FinishedMessage> {
 
     @Override
     public void adjustContext(FinishedMessage message) {
-        if (tlsContext.getChooser().getSelectedProtocolVersion().isTLS13() || tlsContext.getChooser().getHighestProtocolVersion().isDTLS13()) {
+        if (tlsContext.getChooser().getSelectedProtocolVersion().isTLS13()
+                || tlsContext.getChooser().getHighestProtocolVersion().isDTLS13()) {
             if (tlsContext.getTalkingConnectionEndType()
                     != tlsContext.getChooser().getConnectionEndType()) {
                 if (tlsContext.getTalkingConnectionEndType() == ConnectionEndType.SERVER) {
@@ -60,8 +61,9 @@ public class FinishedHandler extends HandshakeMessageHandler<FinishedMessage> {
                         }
                     }
                     if (!tlsContext.isExtensionNegotiated(ExtensionType.EARLY_DATA)) {
-                        if (tlsContext.getChooser().getHighestProtocolVersion().isDTLS13()){
-                            // DTLS 1.3 without early data, then we need placeholder cipher for epoch=1
+                        if (tlsContext.getChooser().getHighestProtocolVersion().isDTLS13()) {
+                            // DTLS 1.3 without early data, then we need placeholder cipher for
+                            // epoch=1
                             setClientRecordCipher(Tls13KeySetType.HANDSHAKE_TRAFFIC_SECRETS);
                         }
                         setClientRecordCipher(Tls13KeySetType.HANDSHAKE_TRAFFIC_SECRETS);

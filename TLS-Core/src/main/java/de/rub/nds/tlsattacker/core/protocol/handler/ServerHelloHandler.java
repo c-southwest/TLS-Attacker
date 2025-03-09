@@ -199,7 +199,7 @@ public class ServerHelloHandler extends HandshakeMessageHandler<ServerHelloMessa
         KeySet serverKeySet = getTls13KeySet(tlsContext, tlsContext.getActiveServerKeySetType());
         if (tlsContext.getRecordLayer() != null) {
             if (tlsContext.getChooser().getConnectionEndType() == ConnectionEndType.CLIENT) {
-                if (!tlsContext.isExtensionNegotiated(ExtensionType.EARLY_DATA)){
+                if (!tlsContext.isExtensionNegotiated(ExtensionType.EARLY_DATA)) {
                     // DTLS 1.3 without early data, then we need placeholder cipher for epoch=1
                     tlsContext
                             .getRecordLayer()
