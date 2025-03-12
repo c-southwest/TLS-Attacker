@@ -78,13 +78,6 @@ public class RecordPreparator extends Preparator<Record> {
 
         record.setUnifiedHeaderBitmask(bitmask);
         LOGGER.debug("[DEBUG] setUnifiedHeaderBitmask: {}", String.format("0x%02X", bitmask));
-
-        if (record.getSequenceNumber() != null && record.getSequenceNumber().getValue() != null) {
-            record.setSequenceNumberSuffix(
-                    record.getSequenceNumber().getValue().intValue() & 0xFFFF);
-        } else {
-            record.setSequenceNumberSuffix(0);
-        }
     }
 
     public void encrypt() {

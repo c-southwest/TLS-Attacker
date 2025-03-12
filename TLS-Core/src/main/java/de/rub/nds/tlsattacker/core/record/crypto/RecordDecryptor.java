@@ -141,9 +141,11 @@ public class RecordDecryptor extends Decryptor {
             int decryptedSeqNum = encryptedSeqNum ^ (((mask[0] & 0xFF) << 8) | (mask[1] & 0xFF));
             LOGGER.debug("[DEBUG] decryptedSeqNum: {}", decryptedSeqNum);
             record.setSequenceNumberSuffix(decryptedSeqNum);
-            // TODO: we may need to use another way to record the sequence number, since
-            // SequenceNumberSuffix is only 2 bytes
-            record.setSequenceNumber(BigInteger.valueOf(decryptedSeqNum));
+            record.setSequenceNumber(
+                    BigInteger.valueOf(recordCipher.getState().getReadSequenceNumber()));
+            if (decryptedSeqNum != recordCipher.getState().getReadSequenceNumber()) {
+                LOGGER.warn("[DEBUG] Decrypted sequence number mismatch");
+            }
         }
     }
 

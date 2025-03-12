@@ -107,10 +107,11 @@ public class RecordEncryptor extends Encryptor {
             mask = generateAESMask(snKey, firstBlock);
             LOGGER.debug("[DEBUG] Generated mask: {}", bytesToHexWithSpaces(mask));
 
-            int plainSeqNum = record.getSequenceNumberSuffix().getValue();
+            BigInteger plainSeqNum = record.getSequenceNumber().getValue();
             LOGGER.debug("[DEBUG] Plain sequence number: {}", plainSeqNum);
 
-            int encryptedSeqNum = plainSeqNum ^ (((mask[0] & 0xFF) << 8) | (mask[1] & 0xFF));
+            BigInteger maskValue = BigInteger.valueOf(((mask[0] & 0xFF) << 8) | (mask[1] & 0xFF));
+            int encryptedSeqNum = plainSeqNum.xor(maskValue).intValue();
             LOGGER.debug("[DEBUG] Encrypted sequence number: {}", encryptedSeqNum);
 
             record.setSequenceNumberSuffix(encryptedSeqNum);
