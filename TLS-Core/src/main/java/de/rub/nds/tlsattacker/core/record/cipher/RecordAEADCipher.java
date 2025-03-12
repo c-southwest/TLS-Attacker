@@ -78,7 +78,7 @@ public class RecordAEADCipher extends RecordCipher {
         byte[] gcmNonce = ArrayConverter.concatenate(aeadSalt, explicitNonce);
 
         // Nonce construction is different for chacha & tls1.3
-        if (getState().getVersion().isTLS13()) {
+        if (getState().getVersion().isTLS13() || getState().getVersion().isDTLS13()) {
             gcmNonce = preprocessIv(record.getSequenceNumber().getValue().longValue(), gcmNonce);
         } else if (getState().getCipherAlg() == CipherAlgorithm.CHACHA20_POLY1305) {
             if (getState().getVersion().isDTLS()) {
