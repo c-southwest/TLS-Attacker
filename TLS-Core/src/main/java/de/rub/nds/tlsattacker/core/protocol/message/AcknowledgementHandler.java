@@ -26,7 +26,18 @@ public class AcknowledgementHandler extends ProtocolMessageHandler<Acknowledgeme
     @Override
     public void adjustContext(AcknowledgementMessage container) {
         if (tlsContext.getTalkingConnectionEndType() == ConnectionEndType.SERVER) {
-            setClientRecordCipher(Tls13KeySetType.APPLICATION_TRAFFIC_SECRETS);
+            if (tlsContext.getWriteEpoch() == 3) {
+                // according to section 6.1 from
+                // https://www.rfc-editor.org/rfc/inline-errata/rfc9147.html
+                // I think the maximum epoch after receive ACK should be 3, and cannot be 4, 5 , and
+                // so on
+                LOGGER.warn("We only allow epoch=3 as the maximum value right now");
+                return;
+            }
+            // Only update cipher when we receive a valid Ack
+            if (container.getRecordNumbers().getValue().length > 0) {
+                setClientRecordCipher(Tls13KeySetType.APPLICATION_TRAFFIC_SECRETS);
+            }
         }
     }
 
