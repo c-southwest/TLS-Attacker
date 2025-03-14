@@ -41,7 +41,9 @@ public class CertificateVerifyPreparator
         LOGGER.debug("Preparing CertificateVerifyMessage");
         algorithm =
                 SignatureAndHashAlgorithmSelector.selectSignatureAndHashAlgorithm(
-                        chooser, chooser.getSelectedProtocolVersion() == ProtocolVersion.TLS13);
+                        chooser,
+                        chooser.getSelectedProtocolVersion() == ProtocolVersion.TLS13
+                                || chooser.getSelectedProtocolVersion().isDTLS13());
         signature = new byte[0];
         try {
             signature = createSignature();
@@ -55,7 +57,8 @@ public class CertificateVerifyPreparator
 
     private byte[] createSignature() throws CryptoException {
         byte[] toBeSigned = chooser.getContext().getTlsContext().getDigest().getRawBytes();
-        if (chooser.getSelectedProtocolVersion().isTLS13()) {
+        if (chooser.getSelectedProtocolVersion().isTLS13()
+                || chooser.getSelectedProtocolVersion().isDTLS13()) {
             if (chooser.getConnectionEndType() == ConnectionEndType.CLIENT) {
                 toBeSigned =
                         ArrayConverter.concatenate(
