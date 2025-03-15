@@ -41,10 +41,13 @@ public abstract class ProtocolMessageHandler<MessageT extends ProtocolMessage>
         }
         // Similarly, we should prevent early Certificate/CertificateVerify being added into digest
         if ((handshakeMessage.getHandshakeMessageType() == HandshakeMessageType.CERTIFICATE
-                || handshakeMessage.getHandshakeMessageType() == HandshakeMessageType.CERTIFICATE_VERIFY)
+                        || handshakeMessage.getHandshakeMessageType()
+                                == HandshakeMessageType.CERTIFICATE_VERIFY)
+                && tlsContext.getConfig().getHighestProtocolVersion().isDTLS13()
                 && goingToBeSent
                 && !tlsContext.shouldSendFinished) {
-            // invalid Certificate, we should send Certificate/CertificateVerify only after we receive server's Finished
+            // invalid Certificate, we should send Certificate/CertificateVerify only after we
+            // receive server's Finished
             return;
         }
         if (!handshakeMessage.getIncludeInDigest()) {
