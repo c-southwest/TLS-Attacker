@@ -80,6 +80,8 @@ import java.util.Set;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class TlsContext extends LayerContext {
 
+    public boolean shouldSendFinished = false;
+
     private List<Session> sessionList;
 
     private Keylogfile keylogfile;

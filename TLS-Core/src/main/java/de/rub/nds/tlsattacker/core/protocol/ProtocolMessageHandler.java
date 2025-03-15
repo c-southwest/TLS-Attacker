@@ -8,6 +8,7 @@
  */
 package de.rub.nds.tlsattacker.core.protocol;
 
+import de.rub.nds.tlsattacker.core.constants.HandshakeMessageType;
 import de.rub.nds.tlsattacker.core.dtls.DtlsHandshakeMessageFragment;
 import de.rub.nds.tlsattacker.core.layer.context.TlsContext;
 import de.rub.nds.tlsattacker.core.layer.data.Handler;
@@ -31,7 +32,12 @@ public abstract class ProtocolMessageHandler<MessageT extends ProtocolMessage>
             return;
         }
         HandshakeMessage handshakeMessage = (HandshakeMessage) message;
-
+        if (handshakeMessage.getHandshakeMessageType() == HandshakeMessageType.FINISHED
+                && goingToBeSent
+                && !tlsContext.shouldSendFinished) {
+            // invalid Finished, we should not add it into digest
+            return;
+        }
         if (!handshakeMessage.getIncludeInDigest()) {
             return;
         }
