@@ -32,10 +32,19 @@ public abstract class ProtocolMessageHandler<MessageT extends ProtocolMessage>
             return;
         }
         HandshakeMessage handshakeMessage = (HandshakeMessage) message;
+        // TODO we should also consider sending early Finished as a server
         if (handshakeMessage.getHandshakeMessageType() == HandshakeMessageType.FINISHED
                 && goingToBeSent
                 && !tlsContext.shouldSendFinished) {
             // invalid Finished, we should not add it into digest
+            return;
+        }
+        // Similarly, we should prevent early Certificate/CertificateVerify being added into digest
+        if ((handshakeMessage.getHandshakeMessageType() == HandshakeMessageType.CERTIFICATE
+                || handshakeMessage.getHandshakeMessageType() == HandshakeMessageType.CERTIFICATE_VERIFY)
+                && goingToBeSent
+                && !tlsContext.shouldSendFinished) {
+            // invalid Certificate, we should send Certificate/CertificateVerify only after we receive server's Finished
             return;
         }
         if (!handshakeMessage.getIncludeInDigest()) {
