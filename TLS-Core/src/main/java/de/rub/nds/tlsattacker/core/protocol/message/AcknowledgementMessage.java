@@ -64,7 +64,7 @@ public class AcknowledgementMessage extends ProtocolMessage {
         this.parsedRecordNumbers = parsedRecordNumbers;
     }
 
-    public void addRecordNumber(int epoch, long sequenceNumber) {
+    public void addRecordNumber(long epoch, long sequenceNumber) {
         this.parsedRecordNumbers.add(new RecordNumberStruct(epoch, sequenceNumber));
     }
 

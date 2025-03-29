@@ -139,6 +139,9 @@ public class ServerHelloHandler extends HandshakeMessageHandler<ServerHelloMessa
     }
 
     private void adjustServerRandom(ServerHelloMessage message) {
+        if (message.isTls13HelloRetryRequest()) {
+            return;
+        }
         tlsContext.setServerRandom(message.getRandom().getValue());
         LOGGER.debug("Set ServerRandom in Context to {}", tlsContext.getServerRandom());
     }
@@ -261,6 +264,15 @@ public class ServerHelloHandler extends HandshakeMessageHandler<ServerHelloMessa
         if (tlsContext.getChooser().getSelectedProtocolVersion().isTLS13()
                 && !message.isTls13HelloRetryRequest()) {
             setServerRecordCipher();
+            setClientRecordCipher();
+        }
+        if (tlsContext.getChooser().getSelectedProtocolVersion().isDTLS13()
+                && !message.isTls13HelloRetryRequest()) {
+            if (!tlsContext.isExtensionNegotiated(ExtensionType.EARLY_DATA)) {
+                setServerRecordCipher();
+                setServerRecordCipher();
+            }
+            setClientRecordCipher();
             setClientRecordCipher();
         }
     }

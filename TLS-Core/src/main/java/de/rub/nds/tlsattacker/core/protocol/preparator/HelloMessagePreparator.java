@@ -53,7 +53,9 @@ public abstract class HelloMessagePreparator<T extends HelloMessage>
                 random = chooser.getServerRandom();
             }
         }
-        msg.setRandom(random);
+        if (msg.getRandom() == null) {
+            msg.setRandom(random);
+        }
         LOGGER.debug("Random: {}", msg.getRandom().getValue());
     }
 

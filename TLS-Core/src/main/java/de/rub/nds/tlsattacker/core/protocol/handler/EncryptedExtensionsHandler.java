@@ -43,6 +43,12 @@ public class EncryptedExtensionsHandler
         }
     }
 
+    @Override
+    public void adjustContextAfterSerialize(EncryptedExtensionsMessage message) {
+        super.adjustContextAfterSerialize(message);
+        tlsContext.shouldSendFinished = true;
+    }
+
     private void warnOnConflictingExtensions() {
         if (tlsContext.getTalkingConnectionEndType()
                 == tlsContext.getChooser().getMyConnectionPeer()) {
