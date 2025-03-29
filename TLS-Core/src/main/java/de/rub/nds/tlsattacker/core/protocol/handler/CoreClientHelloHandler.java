@@ -49,6 +49,14 @@ public abstract class CoreClientHelloHandler<Message extends CoreClientHelloMess
         if (isCookieFieldSet(message)) {
             adjustDTLSCookie(message);
         }
+        if (tlsContext.getConfig().getHighestProtocolVersion().isDTLS13()
+                && tlsContext.getConnection().getLocalConnectionEndType()
+                        == ConnectionEndType.SERVER
+                && tlsContext.getTalkingConnectionEndType() == ConnectionEndType.CLIENT) {
+            // We are server, we want to send HelloRetryRequest to client, we need Cookie
+            // We recorded the lastClientHello, so we don't need to store hash in Cookie
+            tlsContext.setExtensionCookie(new byte[30]);
+        }
         adjustExtensions(message);
         warnOnConflictingExtensions();
         adjustRandomContext(message);

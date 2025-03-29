@@ -183,6 +183,9 @@ public class ServerHelloPreparator extends HelloMessagePreparator<ServerHelloMes
                 msg.setProtocolVersion(chooser.getSelectedProtocolVersion().getValue());
             }
         }
+        if (chooser.getConfig().getHighestProtocolVersion().isDTLS13()) {
+            msg.setProtocolVersion(ProtocolVersion.DTLS12.getValue());
+        }
         LOGGER.debug("ProtocolVersion: {}", msg.getProtocolVersion().getValue());
     }
 

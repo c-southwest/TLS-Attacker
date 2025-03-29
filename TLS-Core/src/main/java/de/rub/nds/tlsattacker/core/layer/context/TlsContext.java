@@ -82,6 +82,10 @@ public class TlsContext extends LayerContext {
 
     public boolean shouldSendFinished = false;
 
+    public boolean shouldTrackAck = false;
+    public List<Long> trackedAckEpoch = new ArrayList<>();
+    public List<Long> trackedAckSeqNumber = new ArrayList<>();
+
     private List<Session> sessionList;
 
     private Keylogfile keylogfile;

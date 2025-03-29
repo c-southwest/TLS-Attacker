@@ -76,6 +76,14 @@ public class PreSharedKeyExtensionHandler extends ExtensionHandler<PreSharedKeyE
     private void selectPsk(PreSharedKeyExtensionMessage message) {
         int pskIdentityIndex = 0;
         List<PskSet> pskSets = tlsContext.getChooser().getPskSets();
+        if (tlsContext.getConfig().getHighestProtocolVersion().isDTLS13()
+                && message.getSelectedIdentity() != null) {
+            int index = message.getSelectedIdentity().getValue();
+            tlsContext.setPsk(pskSets.get(index).getPreSharedKey());
+            tlsContext.setEarlyDataCipherSuite(pskSets.get(index).getCipherSuite());
+            tlsContext.setSelectedIdentityIndex(index);
+            return;
+        }
         if (message.getIdentities() != null) {
             for (PSKIdentity pskIdentity : message.getIdentities()) {
                 for (int x = 0; x < pskSets.size(); x++) {

@@ -27,6 +27,12 @@ public class AcknowledgementPreparator extends ProtocolMessagePreparator<Acknowl
 
     @Override
     protected void prepareProtocolMessageContents() {
-        LOGGER.error("Not implemented yet");
+        var tlsContext = chooser.getContext().getTlsContext();
+        int size = tlsContext.trackedAckSeqNumber.size();
+        for (int i = 0; i < size; i++) {
+            msg.addRecordNumber(
+                    tlsContext.trackedAckEpoch.get(i), tlsContext.trackedAckSeqNumber.get(i));
+        }
+        msg.setRecordNumberLength(16 * size); // 8 for epoch & 8 for seq number
     }
 }

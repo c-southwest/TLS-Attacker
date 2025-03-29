@@ -197,6 +197,15 @@ public class DtlsFragmentLayer
             } else if (dataStream.getHint() instanceof RecordLayerHint) {
                 RecordLayerHint tempHint = (RecordLayerHint) dataStream.getHint();
                 if (tempHint.getType() == ProtocolMessageType.HANDSHAKE) {
+                    if (context.getTlsContext().shouldTrackAck) {
+                        // We save these for sending Acknowledgment message in DTLS 1.3
+                        context.getTlsContext()
+                                .trackedAckEpoch
+                                .add(tempHint.getEpoch().longValue());
+                        context.getTlsContext()
+                                .trackedAckSeqNumber
+                                .add(tempHint.getSequenceNumber().longValue());
+                    }
                     DtlsHandshakeMessageFragment fragment = new DtlsHandshakeMessageFragment();
                     fragment.setEpoch(tempHint.getEpoch());
                     DtlsHandshakeMessageFragmentParser parser =
