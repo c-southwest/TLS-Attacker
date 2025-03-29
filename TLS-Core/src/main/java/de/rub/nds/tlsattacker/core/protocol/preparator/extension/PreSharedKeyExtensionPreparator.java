@@ -238,9 +238,6 @@ public class PreSharedKeyExtensionPreparator
                             LOGGER.debug(
                                     "[DEBUG] append relevantBytes: {}",
                                     bytesToHexWithSpaces(relevantBytes));
-                            //                            LOGGER.debug("[DEBUG] complete digest
-                            // getRawBytes: {}",
-                            // bytesToHexWithSpaces(tlsContext.getDigest().getRawBytes()));
                             SecretKeySpec keySpec =
                                     new SecretKeySpec(binderFinKey, mac.getAlgorithm());
                             mac.init(keySpec);
@@ -256,7 +253,6 @@ public class PreSharedKeyExtensionPreparator
                                     bytesToHexWithSpaces(usedHash));
                             binderVal = mac.doFinal();
 
-                            // 恢复digest的状态，稍后会完整添加ClientHello
                             tlsContext.getDigest().setRawBytes(savedDigest);
                         } else {
                             LOGGER.debug(

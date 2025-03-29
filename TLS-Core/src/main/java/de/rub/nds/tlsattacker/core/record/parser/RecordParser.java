@@ -36,7 +36,7 @@ public class RecordParser extends Parser<Record> {
     public void parse(Record record) {
         LOGGER.debug("Parsing Record");
         byte firstByte = parseByteField(1);
-        if ((firstByte & 0xE0) == 0x20) { // 检查前三位是否为001
+        if ((firstByte & 0xE0) == 0x20) {
             // DTLS 1.3 unified header
             LOGGER.debug("Parsing DTLS 1.3 Record with Unified Header");
             record.setUnifiedHeaderBitmask(firstByte);
@@ -92,15 +92,12 @@ public class RecordParser extends Parser<Record> {
             record.setLength(getBytesLeft());
         }
 
-        // 解析加密的记录内容
         parseProtocolMessageBytes(record);
 
-        // 由于没有明确的ContentType字段，需要根据epoch推断
-        // 这在解密后才能确定
-        record.setContentType((byte) 22); // 假设是Handshake类型
+        // We don't know type yet, we need to decrypt first, so just placeholder
+        record.setContentType((byte) 22);
         record.setContentMessageType(ProtocolMessageType.HANDSHAKE);
 
-        // DTLS 1.3使用TLS 1.2的版本号
         record.setProtocolVersion(ProtocolVersion.DTLS12.getValue());
     }
 
