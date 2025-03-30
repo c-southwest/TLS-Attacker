@@ -25,7 +25,9 @@ public class AcknowledgementHandler extends ProtocolMessageHandler<Acknowledgeme
 
     @Override
     public void adjustContext(AcknowledgementMessage container) {
-        if (tlsContext.getTalkingConnectionEndType() == ConnectionEndType.SERVER) {
+        // only adjust when we are Client and talking to Server, aka, received Ack from Server
+        if (tlsContext.getTalkingConnectionEndType() == ConnectionEndType.SERVER
+            && tlsContext.getConnection().getLocalConnectionEndType() == ConnectionEndType.CLIENT) {
             if (tlsContext.getWriteEpoch() == 3) {
                 // according to section 6.1 from
                 // https://www.rfc-editor.org/rfc/inline-errata/rfc9147.html
