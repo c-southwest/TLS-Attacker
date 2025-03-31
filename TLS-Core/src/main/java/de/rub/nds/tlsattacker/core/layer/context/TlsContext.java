@@ -80,7 +80,11 @@ import java.util.Set;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class TlsContext extends LayerContext {
 
-    public boolean shouldSendFinished = false;
+    /**
+     * If we send Finished at wrong time, we don't want to adjust context. With this flag, we can
+     * skip adjust context when shouldn't.
+     */
+    public boolean dtls13ShouldSendFinished = false;
 
     private List<Session> sessionList;
 
