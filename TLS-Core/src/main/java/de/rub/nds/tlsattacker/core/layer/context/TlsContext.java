@@ -86,7 +86,6 @@ public class TlsContext extends LayerContext {
      */
     private boolean dtls13ShouldSendFinished = false;
 
-    public boolean shouldTrackAck = false;
     public List<Long> trackedAckEpoch = new ArrayList<>();
     public List<Long> trackedAckSeqNumber = new ArrayList<>();
 

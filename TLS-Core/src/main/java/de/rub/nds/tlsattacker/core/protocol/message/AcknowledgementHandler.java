@@ -16,9 +16,7 @@ public class AcknowledgementHandler extends ProtocolMessageHandler<Acknowledgeme
     }
 
     @Override
-    public void adjustContext(AcknowledgementMessage container) {
-
-    }
+    public void adjustContext(AcknowledgementMessage container) {}
 
     private void setClientRecordCipher(Tls13KeySetType keySetType) {
         tlsContext.setActiveClientKeySetType(keySetType);
@@ -51,6 +49,13 @@ public class AcknowledgementHandler extends ProtocolMessageHandler<Acknowledgeme
                                 RecordCipherFactory.getRecordCipher(tlsContext, keySet, true));
             }
         }
+    }
+
+    @Override
+    public void adjustContextAfterSerialize(AcknowledgementMessage message) {
+        super.adjustContextAfterSerialize(message);
+        tlsContext.trackedAckEpoch.clear();
+        tlsContext.trackedAckSeqNumber.clear();
     }
 
     private KeySet getKeySet(TlsContext tlsContext, Tls13KeySetType keySetType) {

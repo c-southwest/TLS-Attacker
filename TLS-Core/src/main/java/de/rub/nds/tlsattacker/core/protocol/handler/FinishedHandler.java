@@ -154,7 +154,7 @@ public class FinishedHandler extends HandshakeMessageHandler<FinishedMessage> {
 
     @Override
     public void adjustContextAfterSerialize(FinishedMessage message) {
-        if (!tlsContext.dtls13ShouldSendFinished || tlsContext.getWriteEpoch()>=3){
+        if (!tlsContext.dtls13ShouldSendFinished || tlsContext.getWriteEpoch() >= 3) {
             return;
         }
         if (tlsContext.getChooser().getSelectedProtocolVersion().isTLS13()
@@ -165,9 +165,6 @@ public class FinishedHandler extends HandshakeMessageHandler<FinishedMessage> {
                 adjustApplicationTrafficSecrets();
                 setServerRecordCipher(Tls13KeySetType.APPLICATION_TRAFFIC_SECRETS);
             }
-        }
-        if (tlsContext.getChooser().getSelectedProtocolVersion().isDTLS13()) {
-            tlsContext.shouldTrackAck = true;
         }
     }
 
