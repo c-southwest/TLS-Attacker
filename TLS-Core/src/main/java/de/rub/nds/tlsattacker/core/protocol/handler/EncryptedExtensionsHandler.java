@@ -46,7 +46,7 @@ public class EncryptedExtensionsHandler
     @Override
     public void adjustContextAfterSerialize(EncryptedExtensionsMessage message) {
         super.adjustContextAfterSerialize(message);
-        tlsContext.shouldSendFinished = true;
+        tlsContext.dtls13ShouldSendFinished = true;
     }
 
     private void warnOnConflictingExtensions() {
