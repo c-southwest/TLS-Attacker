@@ -84,7 +84,7 @@ public class TlsContext extends LayerContext {
      * If we send Finished at wrong time, we don't want to adjust context. With this flag, we can
      * skip adjust context when shouldn't.
      */
-    public boolean dtls13ShouldSendFinished = false;
+    private boolean dtls13ShouldSendFinished = false;
 
     private List<Session> sessionList;
 
@@ -2283,5 +2283,13 @@ public class TlsContext extends LayerContext {
 
     public void setPeerReceiveLimit(Integer peerReceiveLimit) {
         this.peerReceiveLimit = peerReceiveLimit;
+    }
+
+    public boolean isDtls13ShouldSendFinished() {
+        return dtls13ShouldSendFinished;
+    }
+
+    public void setDtls13ShouldSendFinished(boolean dtls13ShouldSendFinished) {
+        this.dtls13ShouldSendFinished = dtls13ShouldSendFinished;
     }
 }

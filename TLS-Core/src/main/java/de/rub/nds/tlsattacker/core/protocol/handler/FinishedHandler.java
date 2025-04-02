@@ -50,7 +50,7 @@ public class FinishedHandler extends HandshakeMessageHandler<FinishedMessage> {
                     adjustApplicationTrafficSecrets();
                     setServerRecordCipher(Tls13KeySetType.APPLICATION_TRAFFIC_SECRETS);
                     // Received server's Finished, so now I should send Finished
-                    tlsContext.dtls13ShouldSendFinished = true;
+                    tlsContext.setDtls13ShouldSendFinished(true);
                     if (tlsContext.getConfig().getDefaultLayerConfiguration()
                             == StackConfiguration.QUIC) {
                         try {

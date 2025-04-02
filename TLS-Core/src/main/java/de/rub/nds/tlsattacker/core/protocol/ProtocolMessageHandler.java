@@ -35,7 +35,7 @@ public abstract class ProtocolMessageHandler<MessageT extends ProtocolMessage>
         // TODO we should also consider sending early Finished as a server
         if (handshakeMessage.getHandshakeMessageType() == HandshakeMessageType.FINISHED
                 && goingToBeSent
-                && !tlsContext.dtls13ShouldSendFinished) {
+                && !tlsContext.isDtls13ShouldSendFinished()) {
             // invalid Finished, we should not add it into digest
             return;
         }
@@ -45,7 +45,7 @@ public abstract class ProtocolMessageHandler<MessageT extends ProtocolMessage>
                                 == HandshakeMessageType.CERTIFICATE_VERIFY)
                 && tlsContext.getConfig().getHighestProtocolVersion().isDTLS13()
                 && goingToBeSent
-                && !tlsContext.dtls13ShouldSendFinished) {
+                && !tlsContext.isDtls13ShouldSendFinished()) {
             // invalid Certificate, we should send Certificate/CertificateVerify only after we
             // receive server's Finished
             return;
