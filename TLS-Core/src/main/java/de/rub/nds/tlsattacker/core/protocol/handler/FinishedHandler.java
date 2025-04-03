@@ -154,7 +154,7 @@ public class FinishedHandler extends HandshakeMessageHandler<FinishedMessage> {
 
     @Override
     public void adjustContextAfterSerialize(FinishedMessage message) {
-        if (!tlsContext.dtls13ShouldSendFinished || tlsContext.getWriteEpoch() >= 3) {
+        if (!tlsContext.isDtls13ShouldSendFinished() || tlsContext.getWriteEpoch() >= 3) {
             return;
         }
         if (tlsContext.getChooser().getSelectedProtocolVersion().isTLS13()
