@@ -39,7 +39,7 @@ public class CertificateRequestSerializer
     @Override
     public byte[] serializeHandshakeMessageContent() {
         LOGGER.debug("Serializing CertificateRequestMessage");
-        if (version.isTLS13()) {
+        if (version.isTLS13() || version.isDTLS13()) {
             writeCertificateRequestContextLength(msg);
             writeCertificateRequestContext(msg);
             writeExtensionLength();
