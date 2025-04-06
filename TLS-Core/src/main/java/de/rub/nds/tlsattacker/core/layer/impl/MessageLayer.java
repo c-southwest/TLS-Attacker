@@ -288,7 +288,7 @@ public class MessageLayer extends ProtocolLayer<LayerProcessingHint, ProtocolMes
             case HEARTBEAT:
                 readHeartbeatProtocolData();
                 break;
-            case Acknowledgement:
+            case ACKNOWLEDGEMENT:
                 readAcknowledgementProtocolData();
                 break;
             case UNKNOWN:

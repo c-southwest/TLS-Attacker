@@ -25,7 +25,7 @@ public class AcknowledgementMessage extends ProtocolMessage {
 
     public AcknowledgementMessage() {
         super();
-        this.protocolMessageType = ProtocolMessageType.Acknowledgement;
+        this.protocolMessageType = ProtocolMessageType.ACKNOWLEDGEMENT;
         this.parsedRecordNumbers = new ArrayList<>();
     }
 
