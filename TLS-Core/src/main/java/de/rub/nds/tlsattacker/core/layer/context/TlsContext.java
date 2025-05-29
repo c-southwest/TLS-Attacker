@@ -421,6 +421,7 @@ public class TlsContext extends LayerContext {
     private byte[] lastServerVerifyData;
 
     private byte[] lastClientHello;
+    private byte[] lastClientHelloCleanProtocolMessageBytes;
 
     private Random random;
 
@@ -2294,5 +2295,14 @@ public class TlsContext extends LayerContext {
 
     public void setDtls13ShouldSendFinished(boolean dtls13ShouldSendFinished) {
         this.dtls13ShouldSendFinished = dtls13ShouldSendFinished;
+    }
+
+    public byte[] getLastClientHelloCleanProtocolMessageBytes() {
+        return lastClientHelloCleanProtocolMessageBytes;
+    }
+
+    public void setLastClientHelloCleanProtocolMessageBytes(
+            byte[] lastClientHelloCleanProtocolMessageBytes) {
+        this.lastClientHelloCleanProtocolMessageBytes = lastClientHelloCleanProtocolMessageBytes;
     }
 }

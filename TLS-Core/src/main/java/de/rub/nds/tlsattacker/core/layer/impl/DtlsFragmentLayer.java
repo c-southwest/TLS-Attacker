@@ -213,6 +213,12 @@ public class DtlsFragmentLayer
                     parser.parse(fragment);
                     fragment.setCompleteResultingMessage(
                             fragment.getSerializer(context).serialize());
+                    if (fragment.getType().getValue()
+                            == HandshakeMessageType.CLIENT_HELLO.getValue()) {
+                        context.getTlsContext()
+                                .setLastClientHelloCleanProtocolMessageBytes(
+                                        fragment.getCompleteResultingMessage().getValue());
+                    }
                     fragmentManager.addMessageFragment(fragment);
                     List<DtlsHandshakeMessageFragment> uninterpretedMessageFragments =
                             fragmentManager.getOrderedCombinedUninterpretedMessageFragments(
